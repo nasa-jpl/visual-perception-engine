@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="sigterm_timeout" default="10" /> <!-- the original default is 5 sec, however the engine takes a bit longer to close properly all children processes -->
+  <node pkg="nn_engine" exec="engine_main" name="nn_engine">
+    <!-- the path to the default configuration file (relative from package dir) -->
+    <param name="engine_configuration_filepath" value="configs/default.json" /> 
+    <!-- the path to the default file containing (relative from package dir) -->
+    <param name="model_registry_filepath" value="model_registry/registry.jsonl" />
+    <param name="input_topic_name" value="images" />
+  </node>
+</launch>

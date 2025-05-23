@@ -1,0 +1,4 @@
+string model_name
+float64 new_rate
+---
+bool success

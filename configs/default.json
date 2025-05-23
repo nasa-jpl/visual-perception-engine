@@ -1,0 +1,39 @@
+{
+    "foundation_model": {
+        "preprocessing_function": "DINOV2PreprocessingTorch",
+        "canonical_name": "DinoFoundationModel_fp16_tensorrt__encoder_size_vits__ignore_xformers_True",
+        "alias": "DINOV2",
+        "rate": 40
+        },
+    "model_heads": [
+        {
+            "canonical_name": "DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits",
+            "alias": "DepthAnythingV2DepthHead",
+            "postprocessing_function": "ResizeAndToCV2Image",
+            "rate": 10
+        },
+        {
+            "canonical_name": "ObjectDetectionHead_fp16_torch__encoder_size_vits",
+            "alias": "ObjectDetectionHead",
+            "rate": 1
+        },
+        {
+            "canonical_name": "SemanticSegmentationHead_fp16_tensorrt__encoder_size_vits__dataset_voc2012",
+            "alias": "SemanticSegmentationHead",
+            "postprocessing_function": "SemSegPostprocessing",
+            "rate": 2
+        }
+    ],
+    "logging": {
+        "log_level": "INFO",
+        "log_to_console": true,
+        "log_file": "/home/{USER}/{ROS2_WORKSPACE}/src/nn_engine/logs/test.log"
+    },
+    "canonical_image_shape_hwc": [1080, 1920, 3],
+    "queue_sizes":{ 
+        "input": 2,
+        "buffer": 5,
+        "output": 10
+    },
+    "output_dir": "runs/engine_test"
+}

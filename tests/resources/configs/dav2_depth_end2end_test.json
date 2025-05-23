@@ -1,0 +1,31 @@
+{
+    "foundation_model": {
+        "preprocessing_function": "DINOV2PreprocessingTorch",
+        "name": "DinoFoundationModel_fp16_tensorrt__encoder_size_vits__ignore_xformers_True",
+        "displayed_name": "DINOV2",
+        "rate": 20
+        },
+    "model_heads": [
+        {
+            "name": "DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits",
+            "displayed_name": "DepthAnythingV2Head",
+            "postprocessing_function": "ResizeAndToImage",
+            "rate": 20
+        }
+    ],
+    "logging": {
+        "log_level": "INFO",
+        "log_to_console": true,
+        "log_file": "tests/temporary/logs/dav2_end2end.log"
+    },
+    "canonical_image_size": {
+        "width": 1920,
+        "height": 1080
+    },
+    "queue_sizes":{ 
+        "input": 2,
+        "buffer": 2,
+        "output": 10
+    },
+    "output_dir": "tests/temporary/outputs"
+}

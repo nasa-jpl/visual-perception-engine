@@ -1,0 +1,63 @@
+[project]
+name = "nn_engine"
+version = "0.1.0"
+description = "Visual Perception Engine"
+requires-python = ">=3.10.12"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+
+authors = [
+  { name = "Jakub Z. Lucki", email = ""},
+  { name = "Jonathan Becktor", email = "jonathan.becktor@jpl.nasa.gov" },
+  { name = "Shehryar Khattak", email = "skhattak@jpl.nasa.gov" },
+  { name = "Rob Royce", email = "rob.royce@jpl.nasa.gov" },
+]
+
+maintainers = [
+  { name = "Rob Royce", email = "rob.royce@jpl.nasa.gov" },
+  { name = "Shehryar Khattak", email = "skhattak@jpl.nasa.gov" },
+]
+
+keywords = [
+  "Robotics", "Data Science", "Machine Learning",
+  "Data Engineering", "Data Infrastructure", "Data Analysis"
+]
+
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: English",
+  "Operating System :: Unix",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+
+dependencies = [
+  "setuptools==58.2.0",
+  "onnxruntime==1.21.0",
+  "onnx_graphsurgeon==0.5.6",
+  "onnx==1.17.0",
+  "torch2trt==0.5.0",
+  "torch==2.4.0",
+  "tensorrt==10.4.0",
+  "torchvision==0.19.0a0+48b1edf",
+  "cuda-python>=12.6",
+  "numpy>=1.26.4",
+  "setuptools"
+]
+
+[project.urls]
+Homepage = "https://github.com/nasa-jpl/visual-perception-engine"
+Issues = "https://github.com/nasa-jpl/visual-perception-engine/issues"
+
+[project.optional-dependencies]
+tests = ["pytest"]
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
