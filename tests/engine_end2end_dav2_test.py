@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import torch
 
-from src.nn_engine.engine import Engine
+from nn_engine.engine import Engine
 from utils import WorkspaceDirectory, image_directories_equal
 
 RESOURCES_PATH = "tests/resources"

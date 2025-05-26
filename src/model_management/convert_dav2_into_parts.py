@@ -1,6 +1,6 @@
 import torch
-from src.model_architectures.depth_anything_v2.dpt import DepthAnythingV2
-from src.model_architectures.dino_foundation_model import DinoFoundationModel
+from model_architectures.depth_anything_v2.dpt import DepthAnythingV2
+from model_architectures.dino_foundation_model import DinoFoundationModel
 
 output_dir = "$ROS_WORKSPACE"/nn_engine/models/checkpoints/"
 

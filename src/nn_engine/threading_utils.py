@@ -4,8 +4,8 @@ from time import perf_counter
 
 from cuda import cuda
 
-from src.nn_engine.cuda_utils import checkCudaErrors
-from src.nn_engine.logging_utils import MESSAGE
+from nn_engine.cuda_utils import checkCudaErrors
+from utils.logging_utils import MESSAGE
 
 
 class StoppableThread(threading.Thread):

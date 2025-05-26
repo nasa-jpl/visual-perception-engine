@@ -6,12 +6,12 @@ import datetime
 import torch
 from torch2trt import TRTModule
 
-from src import model_architectures
-from src.model_architectures.custom_trt_module import CustomTRTModule
-from src.nn_engine.naming_convention import *
-from src.model_management import model_cards
-from src.model_management.model_cards import ModelCard
-from src.model_management.util import PRECISION_MAP_TORCH
+import model_architectures
+from model_architectures.custom_trt_module import CustomTRTModule
+from utils.naming_convention import *
+from model_management import model_cards
+from model_management.model_cards import ModelCard
+from model_management.util import PRECISION_MAP_TORCH
 
 ### setup logging
 logging.basicConfig(
@@ -38,6 +38,9 @@ class ModelRegistry:
 
         assert path.endswith(".jsonl"), "The registry file must be a jsonl file"
         assert not os.path.isfile(path), "The registry file already exists"
+        
+        # create the directory if it does not exist
+        os.makedirs(os.path.dirname(path), exist_ok=True)
 
         # create an empty file
         with open(path, "w") as f:

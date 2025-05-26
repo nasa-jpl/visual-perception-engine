@@ -3,7 +3,7 @@ from typing import Any
 import torch
 from torch2trt import TRTModule, torch_dtype_from_trt, torch_device_from_trt
 
-from src.model_architectures.interfaces import ModelInterfaceBase
+from model_architectures.interfaces import ModelInterfaceBase
 
 
 class CustomTRTModule(TRTModule, ModelInterfaceBase):

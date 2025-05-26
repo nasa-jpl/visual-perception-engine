@@ -8,7 +8,7 @@ pd.options.plotting.backend = "plotly"
 import numpy as np
 import plotly.express as px
 
-from src.nn_engine.logging_utils import MESSAGE
+from utils.logging_utils import MESSAGE
 
 
 class LogAnalyzer:

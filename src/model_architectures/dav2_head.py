@@ -5,10 +5,10 @@ import torch
 import numpy as np
 import torch.nn.functional as F
 
-from src.model_architectures.interfaces import ModelInterfaceBase
-from src.model_architectures.dino_foundation_model import DinoFoundationModel
-from src.model_architectures.depth_anything_v2.dpt import DPTHead
-from src.nn_engine.naming_convention import *
+from model_architectures.interfaces import ModelInterfaceBase
+from model_architectures.dino_foundation_model import DinoFoundationModel
+from model_architectures.depth_anything_v2.dpt import DPTHead
+from utils.naming_convention import *
 
 
 class DepthAnythingV2Head(DPTHead, ModelInterfaceBase):
@@ -120,7 +120,7 @@ class DepthAnythingV2Head(DPTHead, ModelInterfaceBase):
 
 
 if __name__ == "__main__":
-    from src.model_architectures import DinoFoundationModel
+    from model_architectures import DinoFoundationModel
 
     model = DinoFoundationModel("vits", ignore_xformers=True)
     model.load_state_dict(torch.load("$ROS_WORKSPACE"/nn_engine/models/checkpoints/dinov2_vits14_from_dav2.pth"))

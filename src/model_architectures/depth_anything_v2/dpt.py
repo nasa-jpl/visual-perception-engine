@@ -9,8 +9,8 @@ from .dinov2 import DINOv2
 from .util.blocks import FeatureFusionBlock, _make_scratch
 from .util.transform import Resize, NormalizeImage, PrepareForNet
 
-from src.model_architectures.interfaces import ModelInterfaceBase
-from src.nn_engine.naming_convention import *
+from model_architectures.interfaces import ModelInterfaceBase
+from utils.naming_convention import *
 
 
 def _make_fusion_block(features, use_bn, size=None):

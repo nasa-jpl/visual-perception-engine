@@ -1,9 +1,9 @@
 
 import torch
 
-from src.transforms.abstract_transform import AbstractPostprocessing, AbstractPreprocessing
-from src.nn_engine.naming_convention import *
-from src.nn_engine.shape_utils import assert_correct_io_shapes, assert_correct_types
+from transforms.abstract_transform import AbstractPostprocessing, AbstractPreprocessing
+from utils.naming_convention import *
+from utils.shape_utils import assert_correct_io_shapes, assert_correct_types
 
 
 class DefaultPostprocessing(AbstractPostprocessing):

@@ -1,7 +1,7 @@
 from multiprocessing.managers import BaseManager
 from time import time
 
-from src.nn_engine.logging_utils import create_logger, MESSAGE
+from utils.logging_utils import create_logger, MESSAGE
 
 
 class SelectiveQueue:

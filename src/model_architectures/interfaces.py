@@ -4,7 +4,7 @@ from typing import Any
 import torch
 import numpy as np
 
-from src.nn_engine.shape_utils import assert_correct_io_shapes
+from utils.shape_utils import assert_correct_io_shapes
 
 
 class ModelInterfaceBase(ABC):

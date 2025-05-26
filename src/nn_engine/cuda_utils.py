@@ -354,7 +354,7 @@ class CUDASharedMemorySlotWithID(CUDASharedMemorySlot):
         add_batch_dim: bool = False,
     ):
         super().__init__(data_signature, dtype, is_original_process, device_id, add_batch_dim)
-        self.id = mp.Value("d", -1, lock=False)
+        self.id = mp.Value("i", -1, lock=False)
 
     def write(self, source: dict[str, torch.Tensor], id: int, sync: bool) -> None:
         """Write the data and update the ID."""

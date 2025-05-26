@@ -33,7 +33,7 @@ class AbstractTransform(ABC):
 
 class AbstractPreprocessing(AbstractTransform):
     @abstractmethod
-    def __init__(self, fm_signature: dict[str, tuple], fm_type: torch.dtype, target_height: int, target_width: int):
+    def __init__(self, fm_signature: dict[str, tuple], fm_type: torch.dtype, canonical_height: int, canonical_width: int):
         """Every preprocessing should receive information about the output type coming from the following foundation model,
         as well as the canonical shape of images used in the engine."""
         pass

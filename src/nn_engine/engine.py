@@ -12,23 +12,23 @@ import torch
 import torch.multiprocessing as mp
 from cuda import cuda
 
-from src import model_architectures, transforms
-from src.model_management.model_cards import ModelCard, ModelHeadCard
-from src.model_management.registry import ModelRegistry
-from src.model_management.util import PRECISION_MAP_TORCH
-from src.nn_engine.config import Config
-from src.nn_engine.cuda_buffer import CUDATimeBuffer
-from src.nn_engine.cuda_queue import CUDAQueue
-from src.nn_engine.cuda_utils import checkCudaErrors
-from src.nn_engine.dynamic_shape_queue import DynamicShapeQueue
-from src.nn_engine.foundation_model import FoundationModel
-from src.nn_engine.log_analyzer import LogAnalyzer
-from src.nn_engine.logging_utils import MESSAGE, create_logger
-from src.nn_engine.model_head import ModelHead
-from src.nn_engine.naming_convention import *
-from src.nn_engine.shape_utils import is_io_compatible
-from src.nn_engine.threading_utils import QueueReceiverThread
-from src.transforms import AbstractPostprocessing, AbstractPreprocessing
+import model_architectures, transforms
+from model_management.model_cards import ModelCard, ModelHeadCard
+from model_management.registry import ModelRegistry
+from model_management.util import PRECISION_MAP_TORCH
+from nn_engine.config import Config
+from nn_engine.cuda_buffer import CUDATimeBuffer
+from nn_engine.cuda_queue import CUDAQueue
+from nn_engine.cuda_utils import checkCudaErrors
+from nn_engine.dynamic_shape_queue import DynamicShapeQueue
+from nn_engine.foundation_model import FoundationModel
+from nn_engine.log_analyzer import LogAnalyzer
+from utils.logging_utils import MESSAGE, create_logger
+from nn_engine.model_head import ModelHead
+from utils.naming_convention import *
+from utils.shape_utils import is_io_compatible
+from nn_engine.threading_utils import QueueReceiverThread
+from transforms import AbstractPostprocessing, AbstractPreprocessing
 
 TESTING_MODE = False
 PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -303,8 +303,7 @@ class Engine:
 
         assert mp.active_children() == [], "There are still active child processes after stopping the engine."
         import threading
-
-        assert threading.active_count() == 1, "There are still active threads after stopping the engine."
+        assert threading.active_count() == 1, f"There are still active threads after stopping the engine: {list([t.name for t in threading.enumerate()])}"
 
     def test(self, max_test_time: float = 10.0) -> bool:
         self.logger.info(MESSAGE.ENGINE_TEST_START)
@@ -366,7 +365,7 @@ class Engine:
             self.logger.info(MESSAGE.FREQUENCY_CHANGED.format(model_name=candidate.name, frequency=new_rate))
             return True
 
-    def input_image(self, image: torch.Tensor | np.ndarray, image_id: float = -1) -> bool:
+    def input_image(self, image: torch.Tensor | np.ndarray, image_id: int = -1) -> bool:
         try:
             self.input_queue.put_nowait({PREPROCESSING_INPUT: torch.tensor(image)}, image_id)
             self.logger.info(MESSAGE.ADDED_TO_QUEUE.format(n=image_id, queue_size="N/A"))
@@ -466,9 +465,59 @@ class Engine:
 
         return heads
 
+def measure_time(engine: Engine, max_wait_per_image_s: float = 60.0, example_input_max_images: int = 1000, input_dir: str = "resources/cheetah/frames"):    
+    example_images_data = []
+    input_shape = engine.config.canonical_image_shape_hwc[:2]
+    for img in sorted(os.listdir(input_dir)):
+        image = cv2.imread(os.path.join(input_dir, img))
+        resized = cv2.resize(image, (input_shape[1], input_shape[0]))
+        example_images_data.append(resized)
+        
+    num_total_images = len(example_images_data)
+    
+    timings = []
+    num_heads = len(engine.model_heads)
+
+    for i, image_data in enumerate(example_images_data):
+        image_id = i # Use index as a unique image_id for this run
+
+        current_image = image_data if isinstance(image_data, torch.Tensor) else torch.tensor(image_data)
+
+        if current_image.dtype != torch.uint8:
+            current_image = current_image.to(torch.uint8)
+
+        processed_by_head = [False] * num_heads
+        
+        start_time = perf_counter()
+        engine.input_image(current_image, image_id)
+        
+        while not all(processed_by_head) and (perf_counter() - start_time) < max_wait_per_image_s:
+            for head_idx in range(num_heads):
+                if not processed_by_head[head_idx]:
+                    try:
+                        retrieved_n, _ = engine.output_queues[head_idx].get_nowait() # We don't need the content
+                        assert retrieved_n == image_id
+                        processed_by_head[head_idx] = True
+                    except Empty:
+                        pass # Queue is empty for this head, continue polling
+
+        end_time = perf_counter()
+
+        duration = end_time - start_time
+        timings.append(duration)
+
+    if timings:
+        mean_time = np.mean(timings)
+        std_dev_time = np.std(timings)
+        print("--- Time Measurement Results ---")
+        print(f"Successfully processed and timed {len(timings)} images.")
+        print(f"Mean processing speed per image: {1/mean_time:.4f} Hz")
+        print(f"Mean processing time per image: {mean_time:.4f} seconds")
+        print(f"Standard deviation of processing time: {std_dev_time:.4f} seconds")
+
 
 def stress_test(engine: Engine, n_inputs: int, time_interval: float, timeout: float):
-    from src.nn_engine.example_input import ExampleInput
+    from nn_engine.example_input import ExampleInput
 
     example_input = ExampleInput(
         engine,
@@ -528,6 +577,7 @@ if __name__ == "__main__":
         default="model_registry/registry.jsonl",
         help="Path to the file containing the model registry",
     )
+    parser.add_argument("--measure_time", action="store_true", help="Whether to measure how fast the engine is running instead of stress testing it")
     parser.add_argument("--n_inputs", type=int, default=100, help="Number of inputs to run the example with")
     parser.add_argument("--time_interval", type=float, default=1 / 30, help="Time interval between inputs")
     parser.add_argument("--timeout", type=float, default=10.0, help="Timeout for the example run")
@@ -548,7 +598,10 @@ if __name__ == "__main__":
 
         assert engine.test(args.timeout), "Engine test failed"
 
-        stress_test(engine, n_inputs=args.n_inputs, time_interval=args.time_interval, timeout=args.timeout)
+        if args.measure_time:
+            measure_time(engine)
+        else:
+            stress_test(engine, n_inputs=args.n_inputs, time_interval=args.time_interval, timeout=args.timeout)
 
     finally:
         engine.stop()

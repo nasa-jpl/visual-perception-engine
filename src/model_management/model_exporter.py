@@ -6,17 +6,17 @@ import tensorrt as trt
 import torch
 from torch2trt import torch2trt
 
-from src.model_architectures.interfaces import ModelInterfaceBase
-from src import model_architectures
-from src.model_architectures import *
-from src.model_management.model_cards import Precision, Framework, EncoderSize, ModelCard, ModelHeadCard, DAV2Card
-from src.model_management.registry import ModelRegistry
-from src.model_management.util import PRECISION_MAP_TORCH
+from model_architectures.interfaces import ModelInterfaceBase
+import model_architectures
+from model_architectures import *
+from model_management.model_cards import Precision, Framework, EncoderSize, ModelCard, ModelHeadCard, DAV2Card
+from model_management.registry import ModelRegistry
+from model_management.util import PRECISION_MAP_TORCH
 
 PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CHECKPOINT_DIR = os.path.join(PACKAGE_DIR, "models", "checkpoints")
 ENGINE_DIR = os.path.join(PACKAGE_DIR, "models", "engines")
-MODEL_REGISTRY = os.path.join(PACKAGE_DIR, "model_registry", "registry.jsonl")
+MODEL_REGISTRY_RELATIVE = os.path.join("model_registry", "registry.jsonl")
 
 
 class ModelExporter:
@@ -28,6 +28,12 @@ class ModelExporter:
     def __init__(self, checkpoint_dir: str, engine_dir: str):
         self.checkpoint_dir = checkpoint_dir
         self.engine_dir = engine_dir
+        
+        assert os.path.exists(self.checkpoint_dir), f"Checkpoint directory {self.checkpoint_dir} does not exist"
+        
+        if not os.path.exists(self.engine_dir):
+            os.makedirs(self.engine_dir, exist_ok=True)
+            print(f"Engine directory {self.engine_dir} created")
 
     def _compute_n_parameters(self, model: torch.nn.Module) -> int:
         return sum(p.numel() for p in model.parameters())
@@ -103,12 +109,12 @@ class ModelExporter:
     ) -> tuple[str, ModelCard]:
         model = self._initialize_model_class(model_class, {})
 
-        name = f"{model_class.__name__}{name_suffix}_{precision}_{framework}"
+        name = f"{model_class.__name__}{name_suffix}_{precision}"
 
         common_model_card_params = dict(
             name=name,
             precision=precision,
-            framework=framework,
+            framework="tensorrt",
             path2weights=engine_path,
             n_parameters=n_parameters,
             model_class_name=model_class.__name__,
@@ -225,8 +231,10 @@ class ModelExporter:
         return name, model_card
 
 
-def export_default_models():
-    registry = ModelRegistry(MODEL_REGISTRY)
+def export_default_models(registry_path = MODEL_REGISTRY_RELATIVE):
+    """Export default models such that they can be used in the engine.
+        This function takes `registry_path` as an argument, which is the relative path to the registry file."""
+    registry = ModelRegistry(os.path.join(PACKAGE_DIR, registry_path))
     exporter = ModelExporter(CHECKPOINT_DIR, ENGINE_DIR)
 
     ### export DAV2 model
@@ -314,7 +322,3 @@ def export_default_models():
                 trained_on=fn_name,
             )
             registry.register_model(name, model_card)
-
-
-if __name__ == "__main__":
-    export_default_models()

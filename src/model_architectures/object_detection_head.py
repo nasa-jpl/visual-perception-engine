@@ -11,11 +11,11 @@ from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.models.detection.image_list import ImageList
 from torchvision.utils import draw_bounding_boxes
 
-from src.transforms.dinov2_preprocessing import DINOV2PreprocessingTorch
-from src.model_architectures.dino_foundation_model import DinoFoundationModel
-from src.nn_engine.naming_convention import *
+from transforms.dinov2_preprocessing import DINOV2PreprocessingTorch
+from model_architectures.dino_foundation_model import DinoFoundationModel
+from utils.naming_convention import *
 
-from src.model_architectures.interfaces import ModelInterfaceBase
+from model_architectures.interfaces import ModelInterfaceBase
 
 
 def convrelu(in_channels, out_channels, kernel, stride, padding):

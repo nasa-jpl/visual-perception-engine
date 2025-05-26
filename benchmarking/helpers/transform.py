@@ -1,21 +1,11 @@
-from transforms.abstract_transform import AbstractPreprocessing
-from utils.naming_convention import *
-from utils.shape_utils import assert_correct_io_shapes, is_io_compatible, assert_correct_types
-
 import torch
 import torch.nn.functional as F
+
 import numpy as np
 import cv2
 import math
-import os
-from torchvision.transforms import Compose, Resize, Normalize, InterpolationMode
+from torchvision.transforms import Compose
 from typing import Tuple
-from argparse import ArgumentParser
-from tqdm import tqdm
-
-########################################
-### Input transformation in CV2 (LEGACY)
-########################################
 
 
 def apply_min_size(sample, size, image_interpolation_method=cv2.INTER_AREA):
@@ -56,7 +46,7 @@ def apply_min_size(sample, size, image_interpolation_method=cv2.INTER_AREA):
     return tuple(shape)
 
 
-class Resize_CV2(object):
+class Resize(object):
     """Resize sample to given size (width, height)."""
 
     def __init__(
@@ -185,9 +175,7 @@ class Resize_CV2(object):
                 #     sample["semseg_mask"], (width, height), interpolation=cv2.INTER_NEAREST
                 # )
                 sample["semseg_mask"] = F.interpolate(
-                    torch.from_numpy(sample["semseg_mask"]).float()[None, None, ...],
-                    (height, width),
-                    mode="nearest",
+                    torch.from_numpy(sample["semseg_mask"]).float()[None, None, ...], (height, width), mode="nearest"
                 ).numpy()[0, 0]
 
             if "mask" in sample:
@@ -240,10 +228,10 @@ class PrepareForNet(object):
         return sample
 
 
-def get_transform_cv2(target_height, target_width):
+def get_transform(target_height, target_width):
     transform = Compose(
         [
-            Resize_CV2(
+            Resize(
                 width=target_width,
                 height=target_height,
                 resize_target=False,
@@ -260,195 +248,10 @@ def get_transform_cv2(target_height, target_width):
     return transform
 
 
-def process_image_cv2(image, target_height=518, target_width=518):
+def load_image(filepath, target_height=518, target_width=518) -> Tuple[np.ndarray, Tuple[int, int]]:
+    image = cv2.imread(filepath)  # H, W, C
     orig_shape = image.shape[:2]
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) / 255.0
-    image = get_transform_cv2(target_height, target_width)({"image": image})["image"]  # C, H, W
+    image = get_transform(target_height, target_width)({"image": image})["image"]  # C, H, W
     image = image[None]  # B, C, H, W
     return image, orig_shape
-
-
-def load_image_cv2(filepath, target_height=518, target_width=518) -> Tuple[np.ndarray, Tuple[int, int]]:
-    image = cv2.imread(filepath)  # H, W, C
-    image, orig_shape = process_image_cv2(image, target_height, target_width)
-    return image, orig_shape
-
-
-################################################################################
-### Input transformation in pure PyTorch so that images can be processed on GPU
-################################################################################
-
-
-class BGR2RGB(object):
-    def __init__(self):
-        pass
-
-    def __call__(self, sample):
-        """Image is of shape (C, H, W)"""
-        return sample.flip(0)
-
-
-class AddBatchDim(object):
-    def __init__(self):
-        pass
-
-    def __call__(self, sample):
-        return sample[None]
-
-
-class CustomToTensor(object):
-    def __init__(self, torch_output_type: torch.dtype):
-        self.torch_output_type = torch_output_type
-
-    def __call__(self, sample):
-        sample = torch.permute(sample, (2, 0, 1))
-        return sample.to(self.torch_output_type) / 255.0
-
-
-def get_transform_torch(precision=torch.float32, target_height=518, target_width=518):
-    transform = Compose(
-        [
-            CustomToTensor(precision),
-            BGR2RGB(),
-            Resize((target_height, target_width), interpolation=InterpolationMode.BICUBIC),
-            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            AddBatchDim(),
-        ]
-    )
-
-    return transform
-
-
-class DINOV2PreprocessingTorch(torch.nn.Module, AbstractPreprocessing):
-    """Preprocess transformation for DINO V2 implemented in plain pytorch which allows are processed on GPU."""
-
-    def __init__(
-        self, fm_signature: dict[str, tuple], fm_type: torch.dtype, canonical_height: int, canonical_width: int
-    ):
-        super(DINOV2PreprocessingTorch, self).__init__()
-        self.canonical_height = canonical_height
-        self.canonical_width = canonical_width
-
-        self.target_height = fm_signature[FM_INPUT][-2]
-        self.target_width = fm_signature[FM_INPUT][-1]
-
-        self.n_channels = 3
-        self._input_type = torch.uint8  # input should always be an image hence uint8
-        self._output_type = fm_type
-
-        self.custom_to_tensor = CustomToTensor(fm_type)
-        self.bgr2rgb = BGR2RGB()
-        self.normalize = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        self.add_batch_dim = AddBatchDim()
-
-        assert is_io_compatible(self.output_signature, fm_signature), (
-            "Output signature doesn't fit the input signature of the foundation model"
-        )
-
-    @assert_correct_types
-    @assert_correct_io_shapes
-    def forward(self, x: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
-        x = self.custom_to_tensor(x[PREPROCESSING_INPUT])
-        x = self.bgr2rgb(x)
-        x = self.add_batch_dim(x)
-        x = F.interpolate(
-            x,
-            (self.target_height, self.target_width),
-            mode="bicubic",
-            align_corners=False,
-        )  # align_corners=False is necessary to match opencv implementation
-        x = self.normalize(x)
-        return {FM_INPUT: x.contiguous()}
-
-    @property
-    def input_signature(self) -> dict[str, tuple]:
-        return {
-            PREPROCESSING_INPUT: (self.canonical_height, self.canonical_width, self.n_channels)
-        }  # None means that it can accept any size
-
-    @property
-    def output_signature(self) -> dict[str, tuple]:
-        batch_size = 1
-        return {FM_INPUT: (batch_size, self.n_channels, self.target_height, self.target_width)}
-
-    @property
-    def input_type(self) -> torch.dtype:
-        return self._input_type
-
-    @property
-    def output_type(self) -> torch.dtype:
-        return self._output_type
-
-
-########################################################
-### Compare the CV2 and PyTorch transformations
-### TODO: Benchmark the transformations in terms of kitti performance
-########################################################
-
-
-if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument(
-        "--compare_transforms",
-        action="store_true",
-        help="Compare the CV2 and PyTorch transformations. If not Preprocess class is called to allow for debugging.",
-    )
-    args = parser.parse_args()
-
-    if args.compare_transforms:
-        ### Compare the CV2 and PyTorch transformations
-
-        np.random.seed(0)
-        input_np = cv2.imread("$ROS_WORKSPACE"/nn_engine/resources/cheetah/frames/frame_0366.jpg")
-
-        # First comparison
-        transform1 = Compose([BGR2RGB()])
-        assert (
-            transform1(torch.tensor(input_np.transpose((2, 0, 1))))
-            == cv2.cvtColor(input_np, cv2.COLOR_BGR2RGB).transpose((2, 0, 1))
-        ).all()
-
-        # Second comparison
-        transform2 = Compose(
-            [
-                CustomToTensor(torch.float32),
-                BGR2RGB(),
-                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ]
-        )
-
-        def transform2_old(input_np):
-            image = cv2.cvtColor(input_np, cv2.COLOR_BGR2RGB) / 255.0
-            _t = Compose(
-                [
-                    NormalizeImage(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                    PrepareForNet(),
-                ]
-            )
-            return _t({"image": image})["image"]
-
-        assert np.allclose(transform2(torch.tensor(input_np)), transform2_old(input_np))
-
-        # Final comparison
-        transform3 = DINOV2PreprocessingTorch(torch.float32)
-        a = transform3(torch.tensor(input_np))[0]
-        b = process_image_cv2(input_np)[0]
-
-        assert np.allclose(a, b, atol=1e-3)
-
-        print("The transformations are equivalent.")
-
-    else:
-        ### Run the Preprocess class for debugging
-
-        input_dir = "$ROS_WORKSPACE"/nn_engine/resources/cheetah/frames"
-        loaded_images = []
-        for img in tqdm(sorted(os.listdir(input_dir))[100:105], desc="Loading images"):
-            loaded_images.append(
-                torch.tensor(
-                    cv2.imread(os.path.join(input_dir, img)),
-                    device=torch.device("cuda"),
-                )
-            )
-        pipeline = DINOV2PreprocessingTorch(torch.float16).to(device=torch.device("cuda"))
-        out = pipeline(loaded_images[0])

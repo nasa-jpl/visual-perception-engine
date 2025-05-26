@@ -1,7 +1,7 @@
 
-from src.transforms.abstract_transform import AbstractPostprocessing
-from src.nn_engine.naming_convention import *
-from src.nn_engine.shape_utils import assert_correct_io_shapes, assert_correct_types
+from transforms.abstract_transform import AbstractPostprocessing
+from utils.naming_convention import *
+from utils.shape_utils import assert_correct_io_shapes, assert_correct_types
 import torch
 import torch.nn.functional as F
 
