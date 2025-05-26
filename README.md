@@ -28,10 +28,14 @@ git clone https://github.com/nasa-jpl/visual-perception-engine
 If you want to use ROS2 node be careful where do you clone it. For more info see [the section on building ROS2 node](#ros2-node).
 
 ### Set up docker
-For portability we used docker. Our environment is based on great work by [Dustin Franklin](https://github.com/dusty-nv). Firstly, export the following variables to copy your user into the docker:
+For portability we used docker. Our environment is based on great work by [Dustin Franklin](https://github.com/dusty-nv). Firstly, export the following variables:
 ```bash
+# copy your user into the docker
 export _UID=$(id -u)
 export _GID=$(id -g)
+
+# path to ros workspace to be mounted inside docker
+export ROS_WORKSPACE="Path/to/ros/workspace"
 ```
  Secondly, navigate to the `nn_engine/docker` directory and then run these commands:
 ```bash
