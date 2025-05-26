@@ -187,3 +187,10 @@ All models within the engine (foundation_models and model_heads) implement `Mode
 However, each model is internally build around `forward` call which can take arguments (and output results) of any shape their creators' hearts desired. This combined with the fact that ONNX (our implementation first converts models to ONNX and only then to TensorRT) does not support dicts resulted in `forward_annotated` being a wrapper of `forward` instead of drop-in replacement as originally planned. Furhtermore, `ModelInterfaceBase` requires one to implement `deannotate_input` and `annotate_output` methods. First function converts the input dict to the format accepted by `forward`, and the latter converts the output of `forward` to a dict. 
 
 **Important:** For proper functioning ensure that dict keys match across different models. E.g. make sure that when you implement a new model head its `input_signature` will have keys that are in `output_signature` of the foundation model.
+
+## Authors
+If you have any questions please reach out to any of the authors or open a github issue.
+* Jakub Łucki
+* Jonathan Becktor 
+* Shehryar Khattak (skhattak@jpl.nasa.gov)
+* Rob Royce (rob.royce@jpl.nasa.gov)
