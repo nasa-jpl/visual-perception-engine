@@ -1,5 +1,6 @@
 """This module is implementation of DPT head as in DINOv2 paper. It includes parts of code from the original implementation of DINOv2 as well as MMCV library"""
 
+import os
 import math
 import warnings
 from abc import ABCMeta, abstractmethod
@@ -713,6 +714,6 @@ class DPTHead(DPTHeadBase, ModelInterfaceBase):
 
 if __name__ == "__main__":
     model = DPTHead(encoder_size="vits")
-    state_dict = torch.load("$ROS_WORKSPACE"/nn_engine/models/checkpoints/dinov2_vits14_nyu_dpt_head.pth")
+    state_dict = torch.load("{ROS_WORKSPACE}/nn_engine/models/checkpoints/dinov2_vits14_nyu_dpt_head.pth".format(**os.environ))
     # print(state_dict["state_dict"].keys())
     model.load_state_dict(state_dict)

@@ -399,7 +399,7 @@ if __name__ == "__main__":
         ### Compare the CV2 and PyTorch transformations
 
         np.random.seed(0)
-        input_np = cv2.imread("$ROS_WORKSPACE"/nn_engine/resources/cheetah/frames/frame_0366.jpg")
+        input_np = cv2.imread("{ROS_WORKSPACE}/nn_engine/resources/cheetah/frames/frame_0366.jpg".format(**os.environ))
 
         # First comparison
         transform1 = Compose([BGR2RGB()])
@@ -441,7 +441,7 @@ if __name__ == "__main__":
     else:
         ### Run the Preprocess class for debugging
 
-        input_dir = "$ROS_WORKSPACE"/nn_engine/resources/cheetah/frames"
+        input_dir = "{ROS_WORKSPACE}/nn_engine/resources/cheetah/frames".format(**os.environ)
         loaded_images = []
         for img in tqdm(sorted(os.listdir(input_dir))[100:105], desc="Loading images"):
             loaded_images.append(
