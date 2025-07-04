@@ -4,7 +4,7 @@ import time
 import json
 import multiprocessing
 import torch
-import pycuda.driver as cuda
+# import pycuda.driver as cuda
 from contextlib import contextmanager
 from jtop import jtop, JtopException
 
@@ -131,11 +131,3 @@ def gpu_intensive_function(target_memory=1):
     mat1 = torch.rand(size=(side_size, side_size), device=torch.device("cuda"), dtype=torch.float32)
     mat2 = torch.rand(size=(side_size, side_size), device=torch.device("cuda"), dtype=torch.float32)
     _ = mat1 @ mat2
-
-
-if __name__ == "__main__":
-    # main function is supposed to work as a unit test for resource monitoring
-
-    with ResourceMonitoring("{ROS_WORKSPACE}/nn_engine/runs/tests".format(**os.environ)):
-        cpu_intesive_function()
-        gpu_intensive_function()

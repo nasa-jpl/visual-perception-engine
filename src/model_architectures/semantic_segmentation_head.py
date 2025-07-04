@@ -10,9 +10,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-from src.model_architectures.interfaces import ModelInterfaceBase
-from src.nn_engine.naming_convention import *
-from src.model_architectures.colormaps import DATASET_COLORMAPS
+from model_architectures.interfaces import ModelInterfaceBase
+from utils.naming_convention import *
+from model_architectures.colormaps import DATASET_COLORMAPS
 
 
 class BNHead(torch.nn.Module, metaclass=ABCMeta):

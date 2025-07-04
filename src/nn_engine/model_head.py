@@ -1,8 +1,8 @@
 from queue import Full
 
-from src.nn_engine.logging_utils import MESSAGE
-from src.nn_engine.model_process import ModelProcess
-from src.transforms.abstract_transform import AbstractPostprocessing
+from utils.logging_utils import MESSAGE
+from nn_engine.model_process import ModelProcess
+from transforms.abstract_transform import AbstractPostprocessing
 
 
 class ModelHead(ModelProcess):

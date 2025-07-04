@@ -5,11 +5,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import torch
 
-from src.nn_engine.engine import Engine
+from nn_engine.engine import Engine
 from utils import WorkspaceDirectory, image_directories_equal
 
 RESOURCES_PATH = "tests/resources"
-MODEL_REGISTRY = "$ROS_WORKSPACE"/nn_engine/model_registry/registry.jsonl"
+MODEL_REGISTRY = "{ROS_WORKSPACE}/nn_engine/model_registry/registry.jsonl".format(**os.environ)
 CONGIG_PATH = f"{RESOURCES_PATH}/configs/dav2_depth_end2end_test.json"
 INPUT_PATH = f"{RESOURCES_PATH}/inputs"
 OUTPUT_PATH = f"{RESOURCES_PATH}/outputs/depth/DepthAnythingV2_vits_tensorrt_fp16"

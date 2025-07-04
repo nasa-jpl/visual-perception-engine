@@ -8,8 +8,8 @@ import torch
 import multiprocessing as mp
 from cuda import cuda
 
-from src.nn_engine.cuda_utils import CUDASharedMemorySlotWithID, checkCudaErrors
-from src.nn_engine.logging_utils import create_logger
+from nn_engine.cuda_utils import CUDASharedMemorySlotWithID, checkCudaErrors
+from utils.logging_utils import create_logger
 
 
 class FIFOQueueInterface(ABC):

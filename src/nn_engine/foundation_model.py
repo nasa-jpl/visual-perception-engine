@@ -1,8 +1,8 @@
 from queue import Empty
 
-from src.nn_engine.model_process import ModelProcess
-from src.nn_engine.logging_utils import MESSAGE
-from src.transforms.abstract_transform import AbstractPreprocessing
+from nn_engine.model_process import ModelProcess
+from utils.logging_utils import MESSAGE
+from transforms.abstract_transform import AbstractPreprocessing
 
 
 class FoundationModel(ModelProcess):

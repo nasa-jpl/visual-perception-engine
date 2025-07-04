@@ -13,12 +13,11 @@ The engine levarages a single powerful vision foundation model (DINOv2 in our ca
 ### Data transfer
 Between all elements of the engine data should be exchanged in a dictionary format using meaningful keys for indetifiability. For example, DINOv2 outputs a tuple of 8 tensors, to which we assign names such as `FM_INTERMEDIATE_FEATURES_3`, `FM_INTERMEDIATE_CLS_TOKEN_3`, `FM_OUTPUT_FEATURES`, `FM_OUTPUT_CLS_TOKEN`. This way each model head can specify which tensors does it need. The names of all keys used for data transfered should be declared in `src/engine/naming_convention.py`.
 
-
 ## How to use
 *In this section you will learn how to set up the engine and use it as a black box module.*
 
 > [!NOTE]  
-> Visual Perception Engine was developed and tested on Jetson Orin AGX.
+> Visual Perception Engine was developed and tested on Jetson Orin AGX with Jetpack 6.1. It should (not tested) work on other Jetson devices as long as jetpack version is 6.1 or higher.
 
 First, you will have to clone the repository:
 ```
@@ -28,18 +27,17 @@ git clone https://github.com/nasa-jpl/visual-perception-engine
 
 If you want to use ROS2 node be careful where do you clone it. For more info see [the section on building ROS2 node](#ros2-node).
 
-Next, for simplicity of use install the package locally. To do so make sure that you are in the `nn_engine/` directory containing `pyproject.toml`. Then type:
-```bash
-python3 -m pip install .
-
-# Or if you intend to modify the package internals use
-python3 -m pip install -e .
-```
-
-Now you can verify that the package was successfully installed by running `pip show nn_engine`.
-
 ### Set up docker
-For portability we used docker. Our environment is based on great work by [Dustin Franklin](https://github.com/dusty-nv). First, navigate to the `nn_engine/docker` directory and then run these commands:
+For portability we used docker. Our environment is based on great work by [Dustin Franklin](https://github.com/dusty-nv). Firstly, export the following variables:
+```bash
+# copy your user into the docker
+export _UID=$(id -u)
+export _GID=$(id -g)
+
+# path to ros workspace to be mounted inside docker
+export ROS_WORKSPACE="Path/to/ros/workspace"
+```
+ Secondly, navigate to the `docker/` directory and then run these commands:
 ```bash
 docker compose -f docker-compose.yml build # add `--no-cache` at the end to build from scratch
 docker compose -f docker-compose.yml up -d
@@ -52,12 +50,26 @@ sudo pip3 install .
 cd - # to return to previous directory
 ```
 
+### Install as package
+Next, for simplicity of use install the package inside the container. To do so make sure that you are in the directory containing `pyproject.toml`. Then type:
+```bash
+python3 -m pip install .
+
+# Or if you intend to modify the package internals use
+python3 -m pip install -e .
+```
+
+Now you can verify that the package was successfully installed by running `pip show nn_engine`.
+
 ### Preparing model checkpoints
-To run the default version of the engine first you will have to download all the necessary checkpoints from [here](https://drive.google.com/drive/folders/13kJVAPz1CDynk-J3i-GRdUzOYa66j6vq?usp=drive_link) and place them into `nn_engine/models/checkpoints` folder. Once there run this command:
+To run the default version of the engine first you will have to download all the necessary checkpoints from [here](https://drive.google.com/drive/folders/13kJVAPz1CDynk-J3i-GRdUzOYa66j6vq?usp=drive_link) and place them into `models/checkpoints/` folder. Once there run this command:
 ```bash
 python3 -c "import nn_engine; nn_engine.export_default_models()"
 ```
-This will export all the PyTorch models to TensorRT engines (stored in `nn_engine/models/engines` directory) and register all the models (i.e. add them to registry file `nn_engine/model_registry/registry.jsonl`) such that they can be easily loaded into the engine with desired parameters (e.g. precision)
+This will export all the PyTorch models to TensorRT engines (stored in `models/engines` directory) and register all the models (i.e. add them to registry file `model_registry/registry.jsonl`) such that they can be easily loaded into the engine with desired parameters (e.g. precision)
+
+> [!NOTE]  
+> This step usually takes some time. You can expect up to 30 min of waiting.
 
 ### Set CUDA MPS
 The engine uses multiple processes each using the same GPU. To make it possible you need to enable CUDA MPS. It is available for Tegra devices from CUDA 12.5. To enable it do:
@@ -77,7 +89,7 @@ nvidia-cuda-mps-control -d # Start the daemon.
 ```
 
 ### Engine configuration
-Engine was made to be easily configurable. You can write your own configuration files based on your needs and use it with the engine. The config should be in `json` format and follow the schema defined in `nn_engine/schemas/nn_engine_config.json`. In `nn_engine/configs` there is already a `default.json` configuration file which specifies default configuration with 3 model heads.
+Engine was made to be easily configurable. You can write your own configuration files based on your needs and use it with the engine. The config should be in `json` format and follow the schema defined in `schemas/nn_engine_config.json`. In `configs/` there is already a `default.json` configuration file which specifies default configuration with 3 model heads.
 
 In each configuration file one needs to specify the name of desired foundation models/model heads as specified in the model registry (cannonical name). Additionally, one can specify an alias that will be used across the engine instead of the lengthy cannonical name. For foundation model, you can specify a preprocessing function that you want to use, and for each model head you can specify a postprocessing function. Lastly, for each model you can specify rate, which is the upperbound on the inference frequency of each model (i.e. model can run slower in unexpected cases but it will not run faster than specified value).
 
@@ -146,14 +158,14 @@ colcon build --packages-select nn_engine
 source install/setup.bash
 ```
 > [!NOTE]  
-> The core files for the node can be found in `nn_engine/ros_node` or `nn_engine/include/nn_engine` directories.
+> The core files for the node can be found in `ros_node/` or `include/nn_engine/` directories.
 
 #### Usage
 Once the package is built you can launch it using:
 ```bash
 ros2 launch nn_engine engine_launch.xml
 ```
-The launch file `nn_engine/launch/engine_launch.xml` contains several parameters that you can adjust as needed, for example the topic name from which the images should be taken.
+The launch file `launch/engine_launch.xml` contains several parameters that you can adjust as needed, for example the topic name from which the images should be taken.
 
 The node will create a publisher for every model head listed in the configuration, using alias as a topic name (or `cannonical_name` if alias was not provided).
 
@@ -179,3 +191,10 @@ All models within the engine (foundation_models and model_heads) implement `Mode
 However, each model is internally build around `forward` call which can take arguments (and output results) of any shape their creators' hearts desired. This combined with the fact that ONNX (our implementation first converts models to ONNX and only then to TensorRT) does not support dicts resulted in `forward_annotated` being a wrapper of `forward` instead of drop-in replacement as originally planned. Furhtermore, `ModelInterfaceBase` requires one to implement `deannotate_input` and `annotate_output` methods. First function converts the input dict to the format accepted by `forward`, and the latter converts the output of `forward` to a dict. 
 
 **Important:** For proper functioning ensure that dict keys match across different models. E.g. make sure that when you implement a new model head its `input_signature` will have keys that are in `output_signature` of the foundation model.
+
+## Authors
+If you have any questions please reach out to any of the authors or open a github issue.
+* Jakub Łucki
+* Jonathan Becktor 
+* Shehryar Khattak (skhattak@jpl.nasa.gov)
+* Rob Royce (rob.royce@jpl.nasa.gov)

@@ -8,8 +8,8 @@ from typing import Literal
 import torch
 from cuda import cuda
 
-from src.nn_engine.cuda_utils import CUDASharedMemorySlotWithIDAndTimestamp, checkCudaErrors
-from src.nn_engine.logging_utils import create_logger
+from nn_engine.cuda_utils import CUDASharedMemorySlotWithIDAndTimestamp, checkCudaErrors
+from utils.logging_utils import create_logger
 
 
 class TimeBufferInterface(ABC):

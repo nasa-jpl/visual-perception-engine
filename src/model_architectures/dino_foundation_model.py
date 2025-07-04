@@ -3,10 +3,10 @@ from itertools import chain
 
 import torch
 
-from src.model_architectures.interfaces import ModelInterfaceBase
-from src.model_architectures.depth_anything_v2.dinov2 import DinoVisionTransformer
-from src.model_architectures.depth_anything_v2.dinov2_layers import MemEffAttention, NestedTensorBlock as Block
-from src.nn_engine.naming_convention import *
+from model_architectures.interfaces import ModelInterfaceBase
+from model_architectures.depth_anything_v2.dinov2 import DinoVisionTransformer
+from model_architectures.depth_anything_v2.dinov2_layers import MemEffAttention, NestedTensorBlock as Block
+from utils.naming_convention import *
 
 
 class DinoFoundationModel(DinoVisionTransformer, ModelInterfaceBase):

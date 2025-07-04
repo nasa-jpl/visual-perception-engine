@@ -1,15 +1,16 @@
+import os
 import torch
-from src.model_architectures.depth_anything_v2.dpt import DepthAnythingV2
-from src.model_architectures.dino_foundation_model import DinoFoundationModel
+from model_architectures.depth_anything_v2.dpt import DepthAnythingV2
+from model_architectures.dino_foundation_model import DinoFoundationModel
 
-output_dir = "$ROS_WORKSPACE"/nn_engine/models/checkpoints/"
+output_dir = "{ROS_WORKSPACE}/nn_engine/models/checkpoints/".format(**os.environ)
 
 
 if __name__ == "__main__":
     weights = {
-        "vits": "$ROS_WORKSPACE"/nn_engine/models/checkpoints/depth_anything_v2_vits.pth",
-        "vitb": "$ROS_WORKSPACE"/nn_engine/models/checkpoints/depth_anything_v2_vitb.pth",
-        "vitl": "$ROS_WORKSPACE"/nn_engine/models/checkpoints/depth_anything_v2_vitl.pth",
+        "vits": "{ROS_WORKSPACE}/nn_engine/models/checkpoints/depth_anything_v2_vits.pth".format(**os.environ),
+        "vitb": "{ROS_WORKSPACE}/nn_engine/models/checkpoints/depth_anything_v2_vitb.pth".format(**os.environ),
+        "vitl": "{ROS_WORKSPACE}/nn_engine/models/checkpoints/depth_anything_v2_vitl.pth".format(**os.environ),
     }
 
     model_configs = {

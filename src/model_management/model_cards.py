@@ -2,7 +2,7 @@ import os
 from typing import Literal, Optional
 from dataclasses import dataclass, asdict
 
-from src.nn_engine.naming_convention import *
+from utils.naming_convention import *
 
 
 Precision = Literal["fp32", "fp16", "bfp32", "int8"]

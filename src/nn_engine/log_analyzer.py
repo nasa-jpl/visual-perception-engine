@@ -1,3 +1,4 @@
+import os
 import re
 from typing import Optional
 from datetime import datetime
@@ -8,7 +9,7 @@ pd.options.plotting.backend = "plotly"
 import numpy as np
 import plotly.express as px
 
-from src.nn_engine.logging_utils import MESSAGE
+from utils.logging_utils import MESSAGE
 
 
 class LogAnalyzer:
@@ -204,6 +205,6 @@ class LogAnalyzer:
 
 
 if __name__ == "__main__":
-    logging_config = {"log_file": "$ROS_WORKSPACE"/nn_engine/logs/test.log"}
+    logging_config = {"log_file": "{ROS_WORKSPACE}/nn_engine/logs/test.log".format(**os.environ)}
     log_analyzer = LogAnalyzer(logging_config, "results.png", verbose=True)
     log_analyzer.analyze_log()

@@ -1,3 +1,5 @@
+import os
+
 import cv2
 import torch
 import torch.nn as nn
@@ -9,8 +11,8 @@ from .dinov2 import DINOv2
 from .util.blocks import FeatureFusionBlock, _make_scratch
 from .util.transform import Resize, NormalizeImage, PrepareForNet
 
-from src.model_architectures.interfaces import ModelInterfaceBase
-from src.nn_engine.naming_convention import *
+from model_architectures.interfaces import ModelInterfaceBase
+from utils.naming_convention import *
 
 
 def _make_fusion_block(features, use_bn, size=None):
@@ -283,7 +285,7 @@ if __name__ == "__main__":
     model = DepthAnythingV2(ignore_xformers=True, **model_configs["vits"])
     model.load_state_dict(
         torch.load(
-            os.path.join("$ROS_WORKSPACE"/nn_engine/models/checkpoints/depth_anything_v2_vits.pth"),
+            os.path.join("{ROS_WORKSPACE}/nn_engine/models/checkpoints/depth_anything_v2_vits.pth".format(**os.environ)),
             map_location="cuda",
         )
     )
