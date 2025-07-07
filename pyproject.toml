@@ -7,7 +7,7 @@ license = "Apache-2.0"
 license-files = ["LICENSE"]
 
 authors = [
-  { name = "Jakub Z. Lucki", email = ""},
+  { name = "Jakub Z. Lucki" },
   { name = "Jonathan Becktor", email = "jonathan.becktor@jpl.nasa.gov" },
   { name = "Shehryar Khattak", email = "skhattak@jpl.nasa.gov" },
   { name = "Rob Royce", email = "rob.royce@jpl.nasa.gov" },

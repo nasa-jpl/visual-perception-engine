@@ -34,8 +34,11 @@ For portability we used docker. Our environment is based on great work by [Dusti
 export _UID=$(id -u)
 export _GID=$(id -g)
 
-# path to ros workspace to be mounted inside docker
-export ROS_WORKSPACE="Path/to/ros/workspace"
+# path to workspace (relative to /home/${USER}) to be mounted inside docker
+# if you are using only github repo
+export WORKSPACE="path/to/cloned/repo"
+# if you intend to use ros2 package
+export WORKSPACE="path/to/ros2/workspace"
 ```
  Secondly, navigate to the `docker/` directory and then run these commands:
 ```bash
