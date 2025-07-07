@@ -80,16 +80,23 @@ The engine uses multiple processes each using the same GPU. To make it possible 
 ```bash
 #As $UID, run the commands
 
-export CUDA_VISIBLE_DEVICES=0 # Select GPU 0.
+export CUDA_VISIBLE_DEVICES=0 # Select GPU 0
+export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps
+export CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-mps/log
 
-export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps # Select a location that’s accessible to the given $UID
+# make sure that the directories exist and have correct permissions
+sudo mkdir -p $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
+sudo chown $USER $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
 
-export CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-log # Select a location that’s accessible to the given $UID
-
-nvidia-cuda-mps-control -d # Start the daemon.
+# Start the daemon
+nvidia-cuda-mps-control -d
 
 #This will start the MPS control daemon that will spawn a new MPS Server instance for that $UID starting an application and associate it with GPU visible to the control daemon.
+
+# In case you want to disable CUDA MPS
+echo quit | nvidia-cuda-mps-control
 ```
+
 
 ### Engine configuration
 Engine was made to be easily configurable. You can write your own configuration files based on your needs and use it with the engine. The config should be in `json` format and follow the schema defined in `schemas/vp_engine_config.json`. In `configs/` there is already a `default.json` configuration file which specifies default configuration with 3 model heads.
