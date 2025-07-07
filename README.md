@@ -65,7 +65,7 @@ python3 -m pip install -e .
 Now you can verify that the package was successfully installed by running `pip show vp_engine`.
 
 ### Preparing model checkpoints
-To run the default version of the engine first you will have to download all the necessary checkpoints from [here](https://drive.google.com/drive/folders/13kJVAPz1CDynk-J3i-GRdUzOYa66j6vq?usp=drive_link) and place them into `models/checkpoints/` folder. Once there run this command:
+To run the default version of the engine first you will have to download all the necessary checkpoints from [here](https://drive.google.com/drive/folders/1SWMlEqOE_7EWPCkMloDTXG1_mZAmeW3-) and place them into `models/checkpoints/` folder. Once there run this command:
 ```bash
 python3 -c "import vp_engine; vp_engine.export_default_models()"
 ```
