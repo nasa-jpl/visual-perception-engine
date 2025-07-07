@@ -49,7 +49,10 @@ class Engine:
     all of them should be called from the same process Engine was created in.
     """
 
-    def __init__(self, config_file: str, registry: ModelRegistry | str, embedded_in_ros2: bool = False) -> None:
+    def __init__(self, 
+                 config_file: str = os.path.join(PACKAGE_DIR, "configs", "default.json"), 
+                 registry: ModelRegistry | str = os.path.join(PACKAGE_DIR, "model_registry", "registry.jsonl"), 
+                 embedded_in_ros2: bool = False) -> None:
         self.config = Config(config_file)
         self.registry = registry if isinstance(registry, ModelRegistry) else ModelRegistry(registry)
         self.embedded_in_ros2 = embedded_in_ros2

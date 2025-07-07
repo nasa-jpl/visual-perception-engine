@@ -3,6 +3,7 @@ import json
 from dataclasses import dataclass, field
 from jsonschema import validate, ValidationError
 
+PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 @dataclass
 class Config:
@@ -16,7 +17,7 @@ class Config:
     output_dir: str = field(init=False)
     canonical_image_shape_hwc: dict = field(init=False)
     queue_sizes: dict = field(init=False)
-    schema_path: str = os.path.join(os.path.dirname(__file__), "..", "..", "schemas", "vp_engine_config.json")
+    schema_path: str = os.path.join(PACKAGE_DIR, "schemas", "vp_engine_config.json")
 
     def __post_init__(self):
         try:
