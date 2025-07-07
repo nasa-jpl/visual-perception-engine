@@ -63,7 +63,13 @@ target_link_libraries(engine_main ${cpp_typesupport_target})
 target_link_libraries(engine_main engine_node)
 target_link_libraries(engine_main ${Boost_LIBRARIES} ${Python3_LIBRARIES} ${OpenCV_LIBS})
 
-install(TARGETS engine_node engine_main test_input DESTINATION lib/${PROJECT_NAME})
+install(TARGETS engine_node
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib)
+
+install(TARGETS engine_main test_input
+  RUNTIME DESTINATION lib/${PROJECT_NAME})
+
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME}/)
 
 ament_package()

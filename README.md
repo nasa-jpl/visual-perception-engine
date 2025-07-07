@@ -164,7 +164,7 @@ was_success: bool = change_model_rate("Model_name_to_target", new_rate)
 If you want to use provided ROS2 (Humble) node, you will have to build it first. To do so you should have a ROS2 workspace directory set up (e.g. `~/ros2_ws`), in which you should have `src` directory containing the source code of all your packages. Ideally, this repository should be in that `src` directory (e.g. `~/ros2_ws/src/visual-perception-engine`). Then, navigate to ROS2 workspace directory and run the following commands:
 ```bash
 source /opt/ros/humble/install/setup.bash # set up ROS2 underlay, i.e. be able to use ros2 from command line
-colcon build --packages-select vp_engine
+colcon build --packages-select vp_engine --symlink-install
 source install/setup.bash
 ```
 > [!NOTE]  
