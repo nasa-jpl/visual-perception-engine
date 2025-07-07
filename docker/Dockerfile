@@ -12,6 +12,15 @@ RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/a
 
 RUN echo ${PACKAGE_NAME} > /etc/debian_chroot
 
+# Update the ROS 2 GPG key
+RUN rm /usr/share/keyrings/ros-archive-keyring.gpg
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+RUN apt update && \
+      apt install ros2-apt-source
+RUN rm /etc/apt/sources.list.d/ros2.list
+RUN rm /usr/share/keyrings/ros-archive-keyring.gpg
+
+
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
