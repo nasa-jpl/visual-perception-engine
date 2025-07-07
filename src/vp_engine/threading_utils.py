@@ -4,7 +4,7 @@ from time import perf_counter
 
 from cuda import cuda
 
-from nn_engine.cuda_utils import checkCudaErrors
+from vp_engine.cuda_utils import checkCudaErrors
 from utils.logging_utils import MESSAGE
 
 

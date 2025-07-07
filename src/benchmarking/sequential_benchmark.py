@@ -17,11 +17,11 @@ from src.model_management.util import PRECISION_MAP_TORCH
 from src.transforms import ResizeAndToCV2Image
 from .postprocessing import apply_color_map_and_save, compute_relative_error
 from .helpers.resource_monitor import ResourceMonitoring
-from src.nn_engine.naming_convention import *
+from src.vp_engine.naming_convention import *
 
 # Useful paths
 MODEL_REGISTRY = "model_registry/registry.jsonl"
-OUTPUT_DIR = "nn_engine/runs"
+OUTPUT_DIR = "runs"
 
 # define all benchmarks
 BENCHMARKS = {

@@ -1,5 +1,5 @@
 services:
-  nn_engine:
+  visual-perception-engine:
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,7 +22,7 @@ services:
     cap_add:
       - SYS_NICE
     container_name: engine
-    image: nn_engine:latest
+    image: visual-perception-engine:latest
     runtime: nvidia
     privileged: true
     network_mode: host

@@ -16,18 +16,18 @@ import model_architectures, transforms
 from model_management.model_cards import ModelCard, ModelHeadCard
 from model_management.registry import ModelRegistry
 from model_management.util import PRECISION_MAP_TORCH
-from nn_engine.config import Config
-from nn_engine.cuda_buffer import CUDATimeBuffer
-from nn_engine.cuda_queue import CUDAQueue
-from nn_engine.cuda_utils import checkCudaErrors
-from nn_engine.dynamic_shape_queue import DynamicShapeQueue
-from nn_engine.foundation_model import FoundationModel
-from nn_engine.log_analyzer import LogAnalyzer
+from vp_engine.config import Config
+from vp_engine.cuda_buffer import CUDATimeBuffer
+from vp_engine.cuda_queue import CUDAQueue
+from vp_engine.cuda_utils import checkCudaErrors
+from vp_engine.dynamic_shape_queue import DynamicShapeQueue
+from vp_engine.foundation_model import FoundationModel
+from vp_engine.log_analyzer import LogAnalyzer
 from utils.logging_utils import MESSAGE, create_logger
-from nn_engine.model_head import ModelHead
+from vp_engine.model_head import ModelHead
 from utils.naming_convention import *
 from utils.shape_utils import is_io_compatible
-from nn_engine.threading_utils import QueueReceiverThread
+from vp_engine.threading_utils import QueueReceiverThread
 from transforms import AbstractPostprocessing, AbstractPreprocessing
 
 TESTING_MODE = False
@@ -517,7 +517,7 @@ def measure_time(engine: Engine, max_wait_per_image_s: float = 60.0, example_inp
 
 
 def stress_test(engine: Engine, n_inputs: int, time_interval: float, timeout: float):
-    from nn_engine.example_input import ExampleInput
+    from vp_engine.example_input import ExampleInput
 
     example_input = ExampleInput(
         engine,

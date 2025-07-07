@@ -16,7 +16,7 @@ class Config:
     output_dir: str = field(init=False)
     canonical_image_shape_hwc: dict = field(init=False)
     queue_sizes: dict = field(init=False)
-    schema_path: str = os.path.join(os.path.dirname(__file__), "..", "..", "schemas", "nn_engine_config.json")
+    schema_path: str = os.path.join(os.path.dirname(__file__), "..", "..", "schemas", "vp_engine_config.json")
 
     def __post_init__(self):
         try:

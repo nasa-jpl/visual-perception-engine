@@ -1,7 +1,7 @@
 from queue import Full
 
 from utils.logging_utils import MESSAGE
-from nn_engine.model_process import ModelProcess
+from vp_engine.model_process import ModelProcess
 from transforms.abstract_transform import AbstractPostprocessing
 
 

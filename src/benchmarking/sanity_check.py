@@ -10,7 +10,7 @@ from .postprocessing import *
 from .sequential_benchmark import MODEL_REGISTRY, BENCHMARKS, PRECISION_MAP
 from .helpers.transform import load_image
 
-DEBUG_DIR = "nn_engine/runs/debuging"
+DEBUG_DIR = "runs/debuging"
 
 
 # load trt model

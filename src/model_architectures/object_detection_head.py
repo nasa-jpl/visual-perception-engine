@@ -362,13 +362,13 @@ class ObjectDetectionHead(ModelInterfaceBase, ObjectDetector):
 
 
 if __name__ == "__main__":
-    path = "{ROS_WORKSPACE}/nn_engine/tests/resources/object_detection/inputs/20230710_103312.png".format(**os.environ)
+    path = "tests/resources/object_detection/inputs/20230710_103312.png".format(**os.environ)
     image = cv2.imread(path)
     resized = cv2.resize(image, (1920, 1080))
     im0 = torch.tensor(resized).cuda()
 
     # save
-    save_path = "{ROS_WORKSPACE}/nn_engine/models/checkpoints/object_detection_head_vits.pth".format(**os.environ)
+    save_path = "models/checkpoints/object_detection_head_vits.pth".format(**os.environ)
     detector = ObjectDetectionHead("vits")
     detector.load_state_dict(torch.load(save_path))
     detector.cuda()
@@ -377,7 +377,7 @@ if __name__ == "__main__":
 
     preprocessing = DINOV2PreprocessingTorch(torch.float16, 518, 518)
     fm = DinoFoundationModel("vits", ignore_xformers=True, apply_final_norm=False, reshape_to_patches=False)
-    fm.load_state_dict(torch.load("{ROS_WORKSPACE}/nn_engine/models/checkpoints/dinov2_vits14_pretrain.pth".format(**os.environ)))
+    fm.load_state_dict(torch.load("models/checkpoints/dinov2_vits14_pretrain.pth".format(**os.environ)))
     fm.cuda()
     fm.half()
     fm.eval()

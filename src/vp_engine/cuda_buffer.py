@@ -8,7 +8,7 @@ from typing import Literal
 import torch
 from cuda import cuda
 
-from nn_engine.cuda_utils import CUDASharedMemorySlotWithIDAndTimestamp, checkCudaErrors
+from vp_engine.cuda_utils import CUDASharedMemorySlotWithIDAndTimestamp, checkCudaErrors
 from utils.logging_utils import create_logger
 
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(nn_engine)
+project(vp_engine)
 
 # if(POLICY CMP0148)
 #   cmake_policy(SET CMP0148 OLD)

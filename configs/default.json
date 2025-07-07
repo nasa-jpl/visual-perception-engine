@@ -27,7 +27,7 @@
     "logging": {
         "log_level": "INFO",
         "log_to_console": true,
-        "log_file": "/home/{USER}/{ROS2_WORKSPACE}/src/nn_engine/logs/test.log"
+        "log_file": "log.txt"
     },
     "canonical_image_shape_hwc": [1080, 1920, 3],
     "queue_sizes":{ 

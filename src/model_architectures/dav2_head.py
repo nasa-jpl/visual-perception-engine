@@ -124,22 +124,22 @@ if __name__ == "__main__":
     from model_architectures import DinoFoundationModel
 
     model = DinoFoundationModel("vits", ignore_xformers=True)
-    model.load_state_dict(torch.load("{ROS_WORKSPACE}/nn_engine/models/checkpoints/dinov2_vits14_from_dav2.pth".format(**os.environ)))
+    model.load_state_dict(torch.load("models/checkpoints/dinov2_vits14_from_dav2.pth".format(**os.environ)))
 
     torch.save(
         model.norm.state_dict(),
-        "{ROS_WORKSPACE}/nn_engine/models/checkpoints/final_norm_of_dinov2_vits14_from_dav2.pth".format(**os.environ),
+        "models/checkpoints/final_norm_of_dinov2_vits14_from_dav2.pth".format(**os.environ),
     )
     print("saved norm weights")
 
     head = DepthAnythingV2Head("vits")
     head.norm = None  # this is not in the original weights so we need to remove it before loading the weights
     head.load_state_dict(
-        torch.load("{ROS_WORKSPACE}/nn_engine/models/checkpoints/depth_anything_v2_head_vits_from_dav2.pth".format(**os.environ))
+        torch.load("models/checkpoints/depth_anything_v2_head_vits_from_dav2.pth".format(**os.environ))
     )
     head.norm = model.norm
 
     torch.save(
         head.state_dict(),
-        "{ROS_WORKSPACE}/nn_engine/models/checkpoints/depth_anything_v2_head_vits_from_dav2_with_dino_norm.pth".format(**os.environ),
+        "models/checkpoints/depth_anything_v2_head_vits_from_dav2_with_dino_norm.pth".format(**os.environ),
     )

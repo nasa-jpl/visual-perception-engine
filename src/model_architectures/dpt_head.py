@@ -714,6 +714,6 @@ class DPTHead(DPTHeadBase, ModelInterfaceBase):
 
 if __name__ == "__main__":
     model = DPTHead(encoder_size="vits")
-    state_dict = torch.load("{ROS_WORKSPACE}/nn_engine/models/checkpoints/dinov2_vits14_nyu_dpt_head.pth".format(**os.environ))
+    state_dict = torch.load("models/checkpoints/dinov2_vits14_nyu_dpt_head.pth".format(**os.environ))
     # print(state_dict["state_dict"].keys())
     model.load_state_dict(state_dict)

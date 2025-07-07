@@ -10,11 +10,11 @@ from torch.multiprocessing import Process, Event, Value
 from model_architectures.interfaces import ModelInterfaceBase
 from model_management.model_cards import ModelCard
 from model_management.registry import ModelRegistry
-from nn_engine.cuda_buffer import CUDATimeBuffer
-from nn_engine.cuda_queue import CUDAQueue
+from vp_engine.cuda_buffer import CUDATimeBuffer
+from vp_engine.cuda_queue import CUDAQueue
 from utils.logging_utils import create_logger, MESSAGE
-from nn_engine.config import Config
-from nn_engine.cuda_utils import checkCudaErrors
+from vp_engine.config import Config
+from vp_engine.cuda_utils import checkCudaErrors
 
 
 class ModelProcess(Process, ABC):

@@ -1,7 +1,7 @@
 import torch
 import multiprocessing as mp
 
-from nn_engine.cuda_queue import FIFOQueueInterface
+from vp_engine.cuda_queue import FIFOQueueInterface
 
 
 class DynamicShapeQueue(FIFOQueueInterface):

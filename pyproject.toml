@@ -1,5 +1,5 @@
 [project]
-name = "nn_engine"
+name = "vp_engine"
 version = "0.1.0"
 description = "Visual Perception Engine"
 requires-python = ">=3.10.12"

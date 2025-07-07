@@ -136,6 +136,6 @@ def gpu_intensive_function(target_memory=1):
 if __name__ == "__main__":
     # main function is supposed to work as a unit test for resource monitoring
 
-    with ResourceMonitoring("{ROS_WORKSPACE}/nn_engine/runs/tests".format(**os.environ)):
+    with ResourceMonitoring("runs/tests".format(**os.environ)):
         cpu_intesive_function()
         gpu_intensive_function()

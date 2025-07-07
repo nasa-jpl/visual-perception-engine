@@ -62,12 +62,12 @@ python3 -m pip install .
 python3 -m pip install -e .
 ```
 
-Now you can verify that the package was successfully installed by running `pip show nn_engine`.
+Now you can verify that the package was successfully installed by running `pip show vp_engine`.
 
 ### Preparing model checkpoints
 To run the default version of the engine first you will have to download all the necessary checkpoints from [here](https://drive.google.com/drive/folders/13kJVAPz1CDynk-J3i-GRdUzOYa66j6vq?usp=drive_link) and place them into `models/checkpoints/` folder. Once there run this command:
 ```bash
-python3 -c "import nn_engine; nn_engine.export_default_models()"
+python3 -c "import vp_engine; vp_engine.export_default_models()"
 ```
 This will export all the PyTorch models to TensorRT engines (stored in `models/engines` directory) and register all the models (i.e. add them to registry file `model_registry/registry.jsonl`) such that they can be easily loaded into the engine with desired parameters (e.g. precision)
 
@@ -92,7 +92,7 @@ nvidia-cuda-mps-control -d # Start the daemon.
 ```
 
 ### Engine configuration
-Engine was made to be easily configurable. You can write your own configuration files based on your needs and use it with the engine. The config should be in `json` format and follow the schema defined in `schemas/nn_engine_config.json`. In `configs/` there is already a `default.json` configuration file which specifies default configuration with 3 model heads.
+Engine was made to be easily configurable. You can write your own configuration files based on your needs and use it with the engine. The config should be in `json` format and follow the schema defined in `schemas/vp_engine_config.json`. In `configs/` there is already a `default.json` configuration file which specifies default configuration with 3 model heads.
 
 In each configuration file one needs to specify the name of desired foundation models/model heads as specified in the model registry (cannonical name). Additionally, one can specify an alias that will be used across the engine instead of the lengthy cannonical name. For foundation model, you can specify a preprocessing function that you want to use, and for each model head you can specify a postprocessing function. Lastly, for each model you can specify rate, which is the upperbound on the inference frequency of each model (i.e. model can run slower in unexpected cases but it will not run faster than specified value).
 
@@ -107,7 +107,7 @@ Other parameters:
 ### Launching the engine
 Once all of the above is completed you can use the engine. Below is an example code snippet:
 ```python
-from nn_engine import Engine
+from vp_engine import Engine
 
 engine = Engine()
 
@@ -154,19 +154,19 @@ was_success: bool = change_model_rate("Model_name_to_target", new_rate)
 > The engine class and its methods can be only called from within the process it was started in. Engine is not designed to be moved across processes.
 
 ### ROS2 node
-If you want to use provided ROS2 (Humble) node, you will have to build it first. To do so you should have a ROS2 workspace directory set up (e.g. `~/ros2_ws`), in which you should have `src` directory containing the source code of all your packages. Ideally, this repository should be in that `src` directory (e.g. `~/ros2_ws/src/nn_engine`). Then, navigate to ROS2 workspace directory and run the following commands:
+If you want to use provided ROS2 (Humble) node, you will have to build it first. To do so you should have a ROS2 workspace directory set up (e.g. `~/ros2_ws`), in which you should have `src` directory containing the source code of all your packages. Ideally, this repository should be in that `src` directory (e.g. `~/ros2_ws/src/visual-perception-engine`). Then, navigate to ROS2 workspace directory and run the following commands:
 ```bash
 source /opt/ros/humble/install/setup.bash # set up ROS2 underlay, i.e. be able to use ros2 from command line
-colcon build --packages-select nn_engine
+colcon build --packages-select vp_engine
 source install/setup.bash
 ```
 > [!NOTE]  
-> The core files for the node can be found in `ros_node/` or `include/nn_engine/` directories.
+> The core files for the node can be found in `ros_node/` or `include/vp_engine/` directories.
 
 #### Usage
 Once the package is built you can launch it using:
 ```bash
-ros2 launch nn_engine engine_launch.xml
+ros2 launch vp_engine engine_launch.xml
 ```
 The launch file `launch/engine_launch.xml` contains several parameters that you can adjust as needed, for example the topic name from which the images should be taken.
 

@@ -1,6 +1,6 @@
 from queue import Empty
 
-from nn_engine.model_process import ModelProcess
+from vp_engine.model_process import ModelProcess
 from utils.logging_utils import MESSAGE
 from transforms.abstract_transform import AbstractPreprocessing
 

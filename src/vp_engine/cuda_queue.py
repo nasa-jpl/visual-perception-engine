@@ -8,7 +8,7 @@ import torch
 import multiprocessing as mp
 from cuda import cuda
 
-from nn_engine.cuda_utils import CUDASharedMemorySlotWithID, checkCudaErrors
+from vp_engine.cuda_utils import CUDASharedMemorySlotWithID, checkCudaErrors
 from utils.logging_utils import create_logger
 
 

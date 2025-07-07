@@ -1,5 +1,5 @@
 {
-    "$id": "/schemas/nn_engine_config.json",
+    "$id": "/schemas/vp_engine_config.json",
     "title": "NN Engine Configuration",
     "description": "Specifies the configuration for the perception engine",
     "type": "object",

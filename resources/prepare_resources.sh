@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cd /home/naisr/"$ROS_WORKSPACE"/nn_engine/resources
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd $SCRIPT_DIR
 
 # cheetah example
 example1="cheetah"

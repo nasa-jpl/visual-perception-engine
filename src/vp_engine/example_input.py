@@ -8,9 +8,9 @@ import torch
 from cuda import cuda
 
 from utils.logging_utils import create_logger
-from nn_engine.engine import Engine
+from vp_engine.engine import Engine
 from utils.naming_convention import *
-from nn_engine.cuda_utils import checkCudaErrors
+from vp_engine.cuda_utils import checkCudaErrors
 
 EXAMPLE_IMG_DIR1 = "tests/resources/inputs"
 EXAMPLE_IMG_DIR2 = "tests/resources/object_detection/inputs"

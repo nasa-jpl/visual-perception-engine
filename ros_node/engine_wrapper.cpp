@@ -1,4 +1,4 @@
-#include "nn_engine/engine_wrapper.hpp"
+#include "vp_engine/engine_wrapper.hpp"
 #include <boost/python.hpp>
 #include <boost/python/numpy.hpp>
 #include <iostream>
