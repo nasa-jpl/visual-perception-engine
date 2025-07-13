@@ -164,16 +164,16 @@ was_success: bool = change_model_rate("Model_name_to_target", new_rate)
 If you want to use provided ROS2 (Humble) node, you will have to build it first. To do so you should have a ROS2 workspace directory set up (e.g. `~/ros2_ws`), in which you should have `src` directory containing the source code of all your packages. Ideally, this repository should be in that `src` directory (e.g. `~/ros2_ws/src/visual-perception-engine`). Then, navigate to ROS2 workspace directory and run the following commands:
 ```bash
 source /opt/ros/humble/install/setup.bash # set up ROS2 underlay, i.e. be able to use ros2 from command line
-colcon build --packages-select vp_engine --symlink-install
+colcon build --packages-select vp_engine_ros --symlink-install
 source install/setup.bash
 ```
 > [!NOTE]  
-> The core files for the node can be found in `ros_node/` or `include/vp_engine/` directories.
+> The core files for the node can be found in `ros_node/` or `include/vp_engine_ros/` directories.
 
 #### Usage
 Once the package is built you can launch it using:
 ```bash
-ros2 launch vp_engine engine_launch.xml
+ros2 launch vp_engine_ros engine_launch.xml
 ```
 The launch file `launch/engine_launch.xml` contains several parameters that you can adjust as needed, for example the topic name from which the images should be taken.
 

@@ -4,12 +4,12 @@
 #include <opencv2/opencv.hpp>
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
-#include "vp_engine/engine_wrapper.hpp"
+#include "vp_engine_ros/engine_wrapper.hpp"
 
 // Include custom message and service types.
-#include "vp_engine/msg/object_detection_output.hpp"
-#include "vp_engine/srv/change_model_rate.hpp"
-#include "vp_engine/srv/get_model_names.hpp"
+#include "vp_engine_ros/msg/object_detection_output.hpp"
+#include "vp_engine_ros/srv/change_model_rate.hpp"
+#include "vp_engine_ros/srv/get_model_names.hpp"
 
 // For keeping bounding boxes as a matrix.
 #include "std_msgs/msg/float32_multi_array.hpp"
@@ -38,6 +38,6 @@ private:
   std::vector<rclcpp::TimerBase::SharedPtr> timers_;
 
   // Service servers.
-  rclcpp::Service<vp_engine::srv::ChangeModelRate>::SharedPtr change_rate_srv_;
-  rclcpp::Service<vp_engine::srv::GetModelNames>::SharedPtr get_model_names_srv_;
+  rclcpp::Service<vp_engine_ros::srv::ChangeModelRate>::SharedPtr change_rate_srv_;
+  rclcpp::Service<vp_engine_ros::srv::GetModelNames>::SharedPtr get_model_names_srv_;
 };
