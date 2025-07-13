@@ -35,14 +35,13 @@ classifiers = [
 ]
 
 dependencies = [
-  "setuptools==58.2.0",
   "onnxruntime==1.21.0",
   "onnx_graphsurgeon==0.5.6",
   "onnx==1.17.0",
   "torch2trt==0.5.0",
-  "torch==2.4.0",
+  "torch>=2.4.0",
   "tensorrt==10.4.0",
-  "torchvision==0.19.0a0+48b1edf",
+  "torchvision>0.19.0",
   "cuda-python>=12.6",
   "numpy>=1.26.4",
   "setuptools"
@@ -56,8 +55,14 @@ Issues = "https://github.com/nasa-jpl/visual-perception-engine/issues"
 tests = ["pytest"]
 
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires      = ["setuptools>=78",
+                 "packaging>=24.2",
+                 "wheel>=0.38",
+                 "pip>=23"]       
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+vp_engine = ["schemas/*.json"]
