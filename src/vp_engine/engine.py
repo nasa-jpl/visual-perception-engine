@@ -178,9 +178,9 @@ class Engine:
             # and the user should just make sure to call stop afterwards
             def signal_handler(sig, frame):
                 if not self.stopping:
-                    self.stop()
-                    signal.getsignal(signal.SIGINT)(sig, frame)
                     self.stopping = True
+                    self.stop()
+                    raise KeyboardInterrupt
 
             signal.signal(signal.SIGINT, signal_handler)
 
