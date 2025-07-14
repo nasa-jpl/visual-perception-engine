@@ -24,7 +24,7 @@ class StoppableThread(threading.Thread):
 
 
 class QueueReceiverThread(StoppableThread):
-    def __init__(self, queue, output_list, n_inputs, head_name, logger, timeout: int = 10, *args, **kwargs):
+    def __init__(self, queue, output_list, n_inputs, head_name, logger, timeout: int = 10, with_cloning: bool = False, *args, **kwargs):
         super(QueueReceiverThread, self).__init__(*args, **kwargs)
         self.queue = queue
         self.output_list = output_list
@@ -32,6 +32,7 @@ class QueueReceiverThread(StoppableThread):
         self.head_name = head_name
         self.logger = logger
         self.timeout = timeout  # amount of time to wait for the next output
+        self.with_cloning = with_cloning # should cloning be performed after receiving the output
 
     def run(self):
         checkCudaErrors(cuda.cuInit(0))
@@ -43,9 +44,12 @@ class QueueReceiverThread(StoppableThread):
                 n, output = self.queue.get_nowait()
                 self.logger.info(MESSAGE.OUTPUT_RECEIVED.format(n=n, head_name=self.head_name))
                 last_received_t = perf_counter()
-                output = {k: v.clone() for k, v in output.items()}
-                self.output_list.append((n, output))
-                self.logger.info(MESSAGE.OUTPUT_CLONED.format(n=n, head_name=self.head_name))
+                if self.with_cloning:
+                    output = {k: v.clone() for k, v in output.items()}
+                    self.output_list.append((n, output))
+                    self.logger.info(MESSAGE.OUTPUT_CLONED.format(n=n, head_name=self.head_name))
+                else:
+                    self.output_list.append((n, None))
             except Empty:
                 pass
             finally:

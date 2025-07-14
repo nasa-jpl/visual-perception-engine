@@ -473,6 +473,7 @@ class Engine:
         return heads
 
 def measure_time(engine: Engine, max_wait_per_image_s: float = 60.0, example_input_max_images: int = 1000, input_dir: str = os.path.join(REPOSITORY_DIR, "resources", "cheetah", "frames")):    
+    engine.process_names["input"] = engine.process_names["main"]
     example_images_data = []
     input_shape = engine.config.canonical_image_shape_hwc[:2]
     for img in sorted(os.listdir(input_dir)):
@@ -503,6 +504,7 @@ def measure_time(engine: Engine, max_wait_per_image_s: float = 60.0, example_inp
                 if not processed_by_head[head_idx]:
                     try:
                         retrieved_n, _ = engine.output_queues[head_idx].get_nowait() # We don't need the content
+                        engine.logger.info(MESSAGE.OUTPUT_RECEIVED.format(n=retrieved_n, head_name=engine.model_heads[head_idx].name))
                         assert retrieved_n == image_id
                         processed_by_head[head_idx] = True
                     except Empty:
@@ -560,6 +562,8 @@ def stress_test(engine: Engine, n_inputs: int, time_interval: float, timeout: fl
         os.makedirs(head_dir)
 
         for n, output in head_output:
+            if not output:
+                continue
             try:
                 head_cls = getattr(model_architectures, engine.model_heads[i].model_card.model_class_name)
                 original_image = torch.tensor(example_input.input_images[n % len(example_input.input_images)])
@@ -620,5 +624,4 @@ if __name__ == "__main__":
         fm_proc=engine.process_names["foundation_model"],
         heads_proc=engine.process_names["model_heads"],
         main_proc=engine.process_names["main"],
-        output_file="runtime.png",
     ).analyze_log()
