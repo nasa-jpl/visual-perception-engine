@@ -31,7 +31,8 @@ from vp_engine.threading_utils import QueueReceiverThread
 from transforms import AbstractPostprocessing, AbstractPreprocessing
 
 TESTING_MODE = False
-PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# NOTE This will not work from within an installed package
+REPOSITORY_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class Engine:
@@ -50,8 +51,8 @@ class Engine:
     """
 
     def __init__(self, 
-                 config_file: str = os.path.join(PACKAGE_DIR, "configs", "default.json"), 
-                 registry: ModelRegistry | str = os.path.join(PACKAGE_DIR, "model_registry", "registry.jsonl"), 
+                 config_file: str = os.path.join(REPOSITORY_DIR, "configs", "default.json"), 
+                 registry: ModelRegistry | str = os.path.join(REPOSITORY_DIR, "model_registry", "registry.jsonl"), 
                  embedded_in_ros2: bool = False) -> None:
         self.config = Config(config_file)
         self.registry = registry if isinstance(registry, ModelRegistry) else ModelRegistry(registry)
@@ -71,6 +72,7 @@ class Engine:
         self.output_queues = []
 
         self.main_process_id = os.getpid()
+        self.stopping = False
 
     @property
     def _is_main_process(self):
@@ -175,8 +177,10 @@ class Engine:
             # if it is embedded in ros2, the signal is already handled by ros2
             # and the user should just make sure to call stop afterwards
             def signal_handler(sig, frame):
-                self.stop()
-                signal.getsignal(signal.SIGINT)(sig, frame)
+                if not self.stopping:
+                    self.stop()
+                    signal.getsignal(signal.SIGINT)(sig, frame)
+                    self.stopping = True
 
             signal.signal(signal.SIGINT, signal_handler)
 
@@ -586,8 +590,8 @@ if __name__ == "__main__":
     parser.add_argument("--timeout", type=float, default=10.0, help="Timeout for the example run")
     args = parser.parse_args()
 
-    args.config = os.path.join(PACKAGE_DIR, args.config)
-    args.registry = os.path.join(PACKAGE_DIR, args.registry)
+    args.config = os.path.join(REPOSITORY_DIR, args.config)
+    args.registry = os.path.join(REPOSITORY_DIR, args.registry)
 
     engine = Engine(args.config, args.registry)
     try:
