@@ -12,8 +12,11 @@ from vp_engine.engine import Engine
 from utils.naming_convention import *
 from vp_engine.cuda_utils import checkCudaErrors
 
-EXAMPLE_IMG_DIR1 = "tests/resources/inputs"
-EXAMPLE_IMG_DIR2 = "tests/resources/object_detection/inputs"
+# NOTE This will not work from within an installed package
+REPOSITORY_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+EXAMPLE_IMG_DIR1 = os.path.join(REPOSITORY_DIR, "tests", "resources", "inputs")
+EXAMPLE_IMG_DIR2 = os.path.join(REPOSITORY_DIR, "tests", "resources", "object_detection", "inputs")
 
 
 class ExampleInput(mp.Process):

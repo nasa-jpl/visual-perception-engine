@@ -472,7 +472,7 @@ class Engine:
 
         return heads
 
-def measure_time(engine: Engine, max_wait_per_image_s: float = 60.0, example_input_max_images: int = 1000, input_dir: str = "resources/cheetah/frames"):    
+def measure_time(engine: Engine, max_wait_per_image_s: float = 60.0, example_input_max_images: int = 1000, input_dir: str = os.path.join(REPOSITORY_DIR, "resources", "cheetah", "frames")):    
     example_images_data = []
     input_shape = engine.config.canonical_image_shape_hwc[:2]
     for img in sorted(os.listdir(input_dir)):
