@@ -32,7 +32,6 @@ class LogAnalyzer:
         self.heads_proc = heads_proc
 
         self.metrics = {
-            "total_time": ("ADDED_TO_QUEUE", self.input_proc, "OUTPUT_CLONED", self.main_proc),
             f"time_to_{self.fm_proc}_node": ("ADDED_TO_QUEUE", self.input_proc, "IMAGE_RECEIVED", self.fm_proc),
             # f"{self.fm_proc}_time_cpu2gpu": ("IMAGE_RECEIVED", self.fm_proc, "INPUT_MOVED_TO_GPU", self.fm_proc),
             f"{self.fm_proc}_preprocessing_time": ("IMAGE_RECEIVED", self.fm_proc, "IMAGE_PREPROCESSED", self.fm_proc),
@@ -43,31 +42,32 @@ class LogAnalyzer:
         self.heads_metrics = {}
         for head_proc in self.heads_proc:
             head_metrics = {
-                f"{head_proc}_time_to_head": ("INFERENCE_COMPLETED", self.fm_proc, "IMAGE_RECEIVED", head_proc),
-                # f"{head_proc}_time_cpu2gpu": ("IMAGE_RECEIVED", head_proc, "INPUT_MOVED_TO_GPU", head_proc),
-                f"{head_proc}_inference_time": ("IMAGE_RECEIVED", head_proc, "INFERENCE_COMPLETED", head_proc),
-                f"{head_proc}_postprocessing_time": (
+                (f"{head_proc}", "time_to_head"): ("INFERENCE_COMPLETED", self.fm_proc, "IMAGE_RECEIVED", head_proc),
+                # (f"{head_proc}", "time_cpu2gpu"): ("IMAGE_RECEIVED", head_proc, "INPUT_MOVED_TO_GPU", head_proc),
+                (f"{head_proc}", "inference_time"): ("IMAGE_RECEIVED", head_proc, "INFERENCE_COMPLETED", head_proc),
+                (f"{head_proc}", "postprocessing_time"): (
                     "INFERENCE_COMPLETED",
                     head_proc,
                     "OUTPUTS_POSTPROCESSED",
                     head_proc,
                 ),
-                # f"{head_proc}_time_gpu2cpu": ("OUTPUTS_POSTPROCESSED", head_proc, "OUTPUT_MOVED_TO_CPU", head_proc),
-                f"{head_proc}_time_to_output": ("OUTPUTS_POSTPROCESSED", head_proc, "OUTPUT_RECEIVED", self.main_proc),
-                f"{head_proc}_time_output_cloning": (
-                    "OUTPUT_RECEIVED",
-                    self.main_proc,
-                    "OUTPUT_CLONED",
-                    self.main_proc,
-                ),
+                # (f"{head_proc}", "time_gpu2cpu": ("OUTPUTS_POSTPROCESSED", head_proc, "OUTPUT_MOVED_TO_CPU", head_proc),
+                (f"{head_proc}", "time_to_output"): ("OUTPUTS_POSTPROCESSED", head_proc, "OUTPUT_RECEIVED", self.main_proc),
+                # (f"{head_proc}", "time_output_cloning"): (
+                #     "OUTPUT_RECEIVED",
+                #     self.main_proc,
+                #     "OUTPUT_CLONED",
+                #     self.main_proc,
+                # ),
+                (f"{head_proc}","total_time") : ("ADDED_TO_QUEUE", self.input_proc, "OUTPUT_RECEIVED", self.main_proc),
             }
             self.heads_metrics.update(head_metrics)
 
     @staticmethod
-    def time_diff(df, msg1, proc1, msg2, proc2):
+    def time_diff(df, msg1, proc1, msg2, proc2, head = ""):
         """Calculate the time difference between two log messages."""
-        df1 = df[(df["message"] == msg1) & (df["process"] == proc1)]
-        df2 = df[(df["message"] == msg2) & (df["process"] == proc2)]
+        df1 = df[(df["message"] == msg1) & (df["process"] == proc1) & ((df["head"] == head) | (df["head"] == ""))]
+        df2 = df[(df["message"] == msg2) & (df["process"] == proc2) & ((df["head"] == head) | (df["head"] == ""))]
 
         if len(df1) == 0 or len(df2) == 0:
             return np.nan
@@ -135,15 +135,21 @@ class LogAnalyzer:
                 results[metric].append(self.time_diff(id_df, msg1, proc1, msg2, proc2))
 
             for metric, (msg1, proc1, msg2, proc2) in self.heads_metrics.items():
-                results[metric].append(self.time_diff(id_df, msg1, proc1, msg2, proc2))
+                results[metric].append(self.time_diff(id_df, msg1, proc1, msg2, proc2, metric[0]))
 
         means = {metric: np.nanmean(values) for metric, values in results.items()}
         stds = {metric: np.nanstd(values) for metric, values in results.items()}
 
         for metric, value in means.items():
-            print(f"{metric + ':':<45}{value:.1f} ± {stds[metric]:.1f} ms")
+            if isinstance(metric, tuple):
+                metric_str = "_".join(metric)
+            else:
+                metric_str = metric
+            print(f"{metric_str + ':':<45}{value:.1f} ± {stds[metric]:.1f} ms")
 
         if self.output_file:
+            # convert all keys to strings
+            results = {(k if isinstance(k, str) else "_".join(k)) : v for k,v in results.items()}
             res_df = pd.DataFrame(results)
             res_df.drop(
                 columns=["total_time"], inplace=True
@@ -164,6 +170,7 @@ class LogAnalyzer:
                 "process": pd.Series([], dtype="str"),
                 "message": pd.Series([], dtype=pd.CategoricalDtype(categories=list(MESSAGE.__members__))),
                 "image_id": pd.Series([], dtype="int"),
+                "head": pd.Series([], dtype="str")
             }
         )
         with open(self.log_file, "r") as f:
@@ -199,6 +206,7 @@ class LogAnalyzer:
                 "process": process_name,
                 "message": list(MESSAGE)[log_msg_id].name,
                 "image_id": int(vars.get("n", -1)),
+                "head": vars.get("head_name", "")
             }
 
         return df
