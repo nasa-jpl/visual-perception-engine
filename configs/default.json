@@ -32,7 +32,7 @@
     "canonical_image_shape_hwc": [1080, 1920, 3],
     "queue_sizes":{ 
         "input": 2,
-        "buffer": 5,
+        "intermediate": 2,
         "output": 10
     },
     "output_dir": "runs/engine_test"

@@ -47,10 +47,10 @@
         "type": "object",
         "properties": {
           "input": { "type": "integer" },
-          "buffer": { "type": "integer" },
+          "intermediate": { "type": "integer" },
           "output": { "type": "integer" }
         },
-        "required": ["input", "buffer", "output"]
+        "required": ["input", "intermediate", "output"]
       }
     },
     "required": ["foundation_model", "model_heads", "logging", "canonical_image_shape_hwc", "queue_sizes"]

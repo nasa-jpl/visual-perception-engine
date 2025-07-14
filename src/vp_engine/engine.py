@@ -201,7 +201,7 @@ class Engine:
         self._validate_pipeline(input_signature, preprocessing_f, fm_model_card, head_model_cards, postprocessing_fs)
 
         ### Create interprocess communication structures
-        self.input_queue = CUDAQueue(
+        self.input_queue = CUDATimeBuffer(
             max_size=self.config.queue_sizes["input"],
             dtype=torch.uint8,
             input_device="cpu",
@@ -210,7 +210,7 @@ class Engine:
             add_batch_dim=False,
         )
         self.middle_queue = CUDATimeBuffer(
-            max_size=self.config.queue_sizes["buffer"],
+            max_size=self.config.queue_sizes["intermediate"],
             dtype=PRECISION_MAP_TORCH[fm_model_card.precision],
             input_device="cuda",
             output_device="cuda",
@@ -270,7 +270,7 @@ class Engine:
 
         ### Necessary procedure for CUDAQueue and CUDATimeBuffer to work
         # Share filedescriptors between processes
-        self.input_queue.send_shareable_handles(self.foundation_model.pid, False if TESTING_MODE else True)
+        self.input_queue.send_shareable_handles([self.foundation_model.pid], False if TESTING_MODE else True)
         self.middle_queue.send_shareable_handles([self.foundation_model.pid] + [head.pid for head in self.model_heads])
         for head, output_queue in zip(self.model_heads, self.output_queues):
             output_queue.send_shareable_handles(head.pid)
@@ -325,7 +325,7 @@ class Engine:
 
         for test_input in test_inputs:
             sleep(1)  # first few inferences take longer hence we need to give the system some time
-            self.input_queue.put_nowait(*test_input)
+            self.input_queue.put(*test_input)
 
         for output_queue in self.output_queues:
             outputs = []
@@ -374,7 +374,7 @@ class Engine:
 
     def input_image(self, image: torch.Tensor | np.ndarray, image_id: int = -1) -> bool:
         try:
-            self.input_queue.put_nowait({PREPROCESSING_INPUT: torch.tensor(image)}, image_id)
+            self.input_queue.put({PREPROCESSING_INPUT: torch.tensor(image)}, image_id)
             self.logger.info(MESSAGE.ADDED_TO_QUEUE.format(n=image_id, queue_size="N/A"))
 
         except Full:
@@ -535,7 +535,7 @@ def stress_test(engine: Engine, n_inputs: int, time_interval: float, timeout: fl
         input_shape=engine.config.canonical_image_shape_hwc[:2],
     )
     example_input.start()
-    engine.input_queue.send_shareable_handles(example_input.pid)
+    engine.input_queue.send_shareable_handles([example_input.pid])
 
     outputs = [[] for _ in range(len(engine.model_heads))]
 

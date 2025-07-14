@@ -9,16 +9,18 @@ class FoundationModel(ModelProcess):
     def __init__(self, preprocessing: AbstractPreprocessing, **kwargs) -> None:
         super().__init__(**kwargs)
         self.preprocessing = preprocessing
+        self.most_recent_timestamp = float("-inf")
 
     ### BACKEND ###
 
     def inference_procedure__(self) -> bool:
-        try:
-            n, input = self.input_queue.get_nowait()
-        except Empty:
+        out = self.input_queue.get(self.most_recent_timestamp)
+        if out is None:
             return False
+        n, time_stamp, input_dict = out
         self.logger.info(MESSAGE.IMAGE_RECEIVED.format(n=n))
-        preprocessed = self.preprocessing(input)
+        self.most_recent_timestamp = time_stamp
+        preprocessed = self.preprocessing(input_dict)
         self.logger.info(MESSAGE.IMAGE_PREPROCESSED.format(n=n))
         output_annotated = self.model.forward_annotated(preprocessed)
         self.output_queue.put(output_annotated, n)
