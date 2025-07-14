@@ -1,0 +1,57 @@
+[2025-07-14 10:39:16,533 - INFO - MainProcess] |12| Building engine with foundation model DinoFoundationModel_fp16_tensorrt__encoder_size_vits__ignore_xformers_True and 3 model heads
+[2025-07-14 10:39:16,534 - WARNING - MainProcess] The model head DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits was not trained on the foundation model DinoFoundationModel_fp16_tensorrt__encoder_size_vits__ignore_xformers_True. Make sure you know what you are doing.
+[2025-07-14 10:39:16,534 - WARNING - MainProcess] The model head ObjectDetectionHead_fp16_torch__encoder_size_vits was not trained on the foundation model DinoFoundationModel_fp16_tensorrt__encoder_size_vits__ignore_xformers_True. Make sure you know what you are doing.
+[2025-07-14 10:39:16,536 - INFO - MainProcess] allocating a new mmap of length 4096
+[2025-07-14 10:39:21,113 - INFO - SemanticSegmentationHead] |5| Model SemanticSegmentationHead_fp16_tensorrt__encoder_size_vits__dataset_voc2012 loaded successfully
+[2025-07-14 10:39:21,158 - INFO - DepthAnythingV2DepthHead] |5| Model DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits loaded successfully
+[2025-07-14 10:39:21,284 - INFO - ObjectDetectionHead] |5| Model ObjectDetectionHead_fp16_torch__encoder_size_vits loaded successfully
+[2025-07-14 10:39:22,336 - INFO - DINOV2] |5| Model DinoFoundationModel_fp16_tensorrt__encoder_size_vits__ignore_xformers_True loaded successfully
+[2025-07-14 10:39:22,337 - INFO - MainProcess] |13| Engine was built successfully
+[2025-07-14 10:39:22,338 - INFO - MainProcess] |9| Engine test started
+[2025-07-14 10:39:23,354 - INFO - DINOV2] |0| Received input image -3
+[2025-07-14 10:39:23,408 - INFO - DINOV2] |3| Preprocessed image -3
+[2025-07-14 10:39:23,441 - INFO - DINOV2] |4| Inference on image -3 completed
+[2025-07-14 10:39:23,442 - INFO - ObjectDetectionHead] |0| Received input image -3
+[2025-07-14 10:39:23,443 - INFO - DepthAnythingV2DepthHead] |0| Received input image -3
+[2025-07-14 10:39:23,445 - INFO - SemanticSegmentationHead] |0| Received input image -3
+[2025-07-14 10:39:23,449 - INFO - SemanticSegmentationHead] |4| Inference on image -3 completed
+[2025-07-14 10:39:23,459 - INFO - DepthAnythingV2DepthHead] |4| Inference on image -3 completed
+[2025-07-14 10:39:23,506 - INFO - DepthAnythingV2DepthHead] |15| Postprocessed outputs for image -3
+[2025-07-14 10:39:23,524 - INFO - SemanticSegmentationHead] |15| Postprocessed outputs for image -3
+[2025-07-14 10:39:23,994 - INFO - ObjectDetectionHead] |4| Inference on image -3 completed
+[2025-07-14 10:39:23,994 - INFO - ObjectDetectionHead] |15| Postprocessed outputs for image -3
+[2025-07-14 10:39:24,357 - INFO - DINOV2] |0| Received input image -2
+[2025-07-14 10:39:24,364 - INFO - DINOV2] |3| Preprocessed image -2
+[2025-07-14 10:39:24,388 - INFO - DINOV2] |4| Inference on image -2 completed
+[2025-07-14 10:39:24,389 - INFO - SemanticSegmentationHead] |0| Received input image -2
+[2025-07-14 10:39:24,390 - INFO - SemanticSegmentationHead] |4| Inference on image -2 completed
+[2025-07-14 10:39:24,390 - INFO - DepthAnythingV2DepthHead] |0| Received input image -2
+[2025-07-14 10:39:24,391 - INFO - DepthAnythingV2DepthHead] |4| Inference on image -2 completed
+[2025-07-14 10:39:24,409 - INFO - DepthAnythingV2DepthHead] |15| Postprocessed outputs for image -2
+[2025-07-14 10:39:24,412 - INFO - SemanticSegmentationHead] |15| Postprocessed outputs for image -2
+[2025-07-14 10:39:24,443 - INFO - ObjectDetectionHead] |0| Received input image -2
+[2025-07-14 10:39:24,533 - INFO - ObjectDetectionHead] |4| Inference on image -2 completed
+[2025-07-14 10:39:24,534 - INFO - ObjectDetectionHead] |15| Postprocessed outputs for image -2
+[2025-07-14 10:39:25,359 - INFO - DINOV2] |0| Received input image -1
+[2025-07-14 10:39:25,364 - INFO - DINOV2] |3| Preprocessed image -1
+[2025-07-14 10:39:25,388 - INFO - DINOV2] |4| Inference on image -1 completed
+[2025-07-14 10:39:25,389 - INFO - DepthAnythingV2DepthHead] |0| Received input image -1
+[2025-07-14 10:39:25,390 - INFO - SemanticSegmentationHead] |0| Received input image -1
+[2025-07-14 10:39:25,390 - INFO - DepthAnythingV2DepthHead] |4| Inference on image -1 completed
+[2025-07-14 10:39:25,391 - INFO - SemanticSegmentationHead] |4| Inference on image -1 completed
+[2025-07-14 10:39:25,418 - INFO - DepthAnythingV2DepthHead] |15| Postprocessed outputs for image -1
+[2025-07-14 10:39:25,425 - INFO - SemanticSegmentationHead] |15| Postprocessed outputs for image -1
+[2025-07-14 10:39:25,444 - INFO - ObjectDetectionHead] |0| Received input image -1
+[2025-07-14 10:39:25,486 - INFO - ObjectDetectionHead] |4| Inference on image -1 completed
+[2025-07-14 10:39:25,486 - INFO - ObjectDetectionHead] |15| Postprocessed outputs for image -1
+[2025-07-14 10:39:25,492 - INFO - MainProcess] |19| Frequency of DINOV2 changed to 40 Hz
+[2025-07-14 10:39:25,492 - INFO - MainProcess] |10| Engine test successful
+[2025-07-14 10:39:25,493 - INFO - DINOV2] process shutting down
+[2025-07-14 10:39:25,494 - INFO - DINOV2] process exiting with exitcode 0
+[2025-07-14 10:39:26,681 - INFO - DepthAnythingV2DepthHead] process shutting down
+[2025-07-14 10:39:26,682 - INFO - DepthAnythingV2DepthHead] process exiting with exitcode 0
+[2025-07-14 10:39:27,851 - INFO - ObjectDetectionHead] process shutting down
+[2025-07-14 10:39:27,852 - INFO - ObjectDetectionHead] process exiting with exitcode 0
+[2025-07-14 10:39:29,083 - INFO - SemanticSegmentationHead] process shutting down
+[2025-07-14 10:39:29,083 - INFO - SemanticSegmentationHead] process exiting with exitcode 0
+[2025-07-14 10:39:30,262 - INFO - MainProcess] process shutting down

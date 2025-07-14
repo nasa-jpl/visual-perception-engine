@@ -22,6 +22,8 @@ RUN rm /usr/share/keyrings/ros-archive-keyring.gpg
 
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG ENV PIP_INDEX_URL=https://pypi.jetson-ai-lab.io/jp6/cu126
+ARG ENV PIP_EXTRA_INDEX_URL=https://pypi.ngc.nvidia.com
 
 RUN apt-get update && \
       apt-get -y install sudo
@@ -29,7 +31,17 @@ RUN apt-get update && \
 # Install pip packages
 RUN pip install tqdm plotly kaleido pandas nbformat ipykernel triton onnxruntime cuda-python onnx_graphsurgeon
 RUN pip install -U jetson-stats
-RUN pip install torch==2.4.0 torchvision==0.19.0a0+48b1edf
+
+# these are the original versions but they are currently unavailable
+# RUN pip install torch==2.4.0 torchvision==0.19.0a0+48b1edf
+
+RUN sudo apt remove python3-sympy 
+RUN pip install torch torchvision
+
+# use new index
+RUN unset PIP_INDEX_URL
+RUN pip config set global.index-url https://pypi.jetson-ai-lab.io/jp6/cu126
+
 
 # this doesn't work for now, so we need to install torch2trt manually inside docker
 # Install torch2trt 
