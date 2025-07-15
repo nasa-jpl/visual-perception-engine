@@ -4,6 +4,7 @@ from time import perf_counter, sleep
 import signal
 
 import logging
+import torch
 from cuda import cuda
 from torch.multiprocessing import Process, Event, Value
 
@@ -52,6 +53,10 @@ class ModelProcess(Process, ABC):
         self.kill_switch = Event()
         self.loaded_flag = Event()
         self.proceed_flag = Event()
+        
+        # streams will be initialized later
+        self.copy_stream = None
+        self.compute_stream = None
 
     ### BACKEND ###
 
@@ -63,8 +68,13 @@ class ModelProcess(Process, ABC):
 
         checkCudaErrors(cuda.cuInit(0))
         self.logger = self.get_logger__()
+        
         self.input_queue.recv_shareable_handles()
         self.output_queue.recv_shareable_handles()
+        
+        self.copy_stream = torch.cuda.Stream(priority=-1)
+        self.compute_stream = torch.cuda.Stream(priority=-1)
+        
         self.load_model__()
         self.loaded_flag.set()  # Signal that the model has been loaded
 
