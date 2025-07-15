@@ -61,7 +61,7 @@ class ExampleInput(mp.Process):
 
             start_t = time.perf_counter()
 
-            self.engine.input_image(torch.tensor(img), counter)
+            self.engine.input_image(img, counter)
             counter += 1
 
             sleep_for = max(0, self.time_interval - (time.perf_counter() - start_t))
