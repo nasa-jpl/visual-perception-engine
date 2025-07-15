@@ -137,10 +137,10 @@ class LogAnalyzer:
             for metric, (msg1, proc1, msg2, proc2) in self.heads_metrics.items():
                 results[metric].append(self.time_diff(id_df, msg1, proc1, msg2, proc2, metric[0]))
 
-        means = {metric: np.nanmean(values) for metric, values in results.items()}
+        medians = {metric: np.nanmedian(values) for metric, values in results.items()}
         stds = {metric: np.nanstd(values) for metric, values in results.items()}
 
-        for metric, value in means.items():
+        for metric, value in medians.items():
             if isinstance(metric, tuple):
                 metric_str = "_".join(metric)
             else:
