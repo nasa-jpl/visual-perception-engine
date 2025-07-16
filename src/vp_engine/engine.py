@@ -317,23 +317,23 @@ class Engine:
         self.logger.info(MESSAGE.ENGINE_TEST_START)
         test_shape = self.config.canonical_image_shape_hwc
         test_inputs = [
-            ({PREPROCESSING_INPUT: torch.zeros(test_shape, dtype=torch.uint8)}, -3),
-            ({PREPROCESSING_INPUT: 0.5 * torch.ones(test_shape, dtype=torch.uint8)}, -2),
-            ({PREPROCESSING_INPUT: torch.ones(test_shape, dtype=torch.uint8)}, -1),
+            ( np.zeros(test_shape, dtype=np.uint8), -3),
+            ( 0.5 * np.ones(test_shape, dtype=np.uint8), -2),
+            ( np.ones(test_shape, dtype=np.uint8), -1),
         ]
 
         start_time = perf_counter()
 
         for test_input in test_inputs:
             sleep(1)  # first few inferences take longer hence we need to give the system some time
-            self.input_queue.put(*test_input)
+            self.input_image(*test_input)
 
-        for output_queue in self.output_queues:
+        for head_idx in range(len(self.output_queues)):
             outputs = []
             while len(outputs) < len(test_inputs) and perf_counter() - start_time < max_test_time:
                 try:
-                    n, output_dict = output_queue.get_nowait()
-                    outputs.append({k: v.clone() for k, v in output_dict.items()})
+                    output_dict = self.get_head_output(head_idx)
+                    outputs.append(output_dict)
                 except Empty:
                     pass
 
