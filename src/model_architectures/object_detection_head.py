@@ -146,6 +146,7 @@ class ObjectDetector(torch.nn.Module):
         processing_width: int,
         img_width_dino: int,
         img_height_dino: int,
+        max_objects: int,
     ):
         super().__init__()
         self.num_classes = num_classes  # background, backpack, stairs
@@ -161,6 +162,12 @@ class ObjectDetector(torch.nn.Module):
         self.min_size = min_size
         self.max_size = max_size
         self.box_nms_thresh = box_nms_thresh
+        self.max_objects = max_objects
+        
+        # Empty response if nothing detected:
+        self.empty_labels = torch.zeros(size=(1, self.max_objects), dtype=torch.float16)
+        self.empty_scores = torch.zeros(size=(1, self.max_objects), dtype=torch.float16)
+        self.empty_boxes = torch.zeros(size=(1, self.max_objects, 4), dtype=torch.float16)
 
         backbone = CustomDinoObjectDet(
             self.embedding_dim,
@@ -224,6 +231,15 @@ class ObjectDetector(torch.nn.Module):
             return self.model.eager_outputs({}, detections)
 
         self.model.forward = new_forward
+        
+    def _apply(self, fn):
+        # make sure that .to and other functions are propagated correctly to our empty
+        self.empty_boxes = fn(self.empty_boxes)
+        self.empty_scores = fn(self.empty_scores)
+        self.empty_labels = fn(self.empty_labels)
+        
+        return super()._apply(fn)
+        
 
     def forward(self, x):
         predictions = self.model(x)
@@ -231,21 +247,26 @@ class ObjectDetector(torch.nn.Module):
         pred = predictions[0]
         det_idx = torch.where(pred["scores"] > self.conf_thres)[0]
         # add batch dimension via [None]
-        pred["labels"] = pred["labels"][det_idx][None].to(torch.float16)
-        pred["scores"] = pred["scores"][det_idx][None]
-        pred["boxes"] = pred["boxes"][det_idx][None]
-        # scale boxes to [0, 1]
-        pred["boxes"] /= torch.tensor(
-            [self.processing_width, self.processing_height, self.processing_width, self.processing_height],
-            device=pred["boxes"].device,
-        )
+        if det_idx.shape[0] > 0:
+            det_idx = det_idx[:1]
+            pred["labels"] = pred["labels"][det_idx][None].to(torch.float16)
+            pred["scores"] = pred["scores"][det_idx][None]
+            pred["boxes"] = pred["boxes"][det_idx][None]
+            # scale boxes to [0, 1]
+            pred["boxes"] /= torch.tensor(
+                [self.processing_width, self.processing_height, self.processing_width, self.processing_height],
+                device=pred["boxes"].device,
+            )
+        else:
+            pred["labels"] = self.empty_labels
+            pred["scores"] = self.empty_scores
+            pred["boxes"] = self.empty_boxes
         return pred
 
     @staticmethod
     def label_to_cat(label):
         label_to_cat = {1: "backpack", 2: "stairs"}  # we are shifting the classes by 1 later on
         return label_to_cat[label]
-
 
 class ObjectDetectionHead(ModelInterfaceBase, ObjectDetector):
     _is_model_head = True
@@ -262,6 +283,7 @@ class ObjectDetectionHead(ModelInterfaceBase, ObjectDetector):
         "img_height_dino": 518,
         "conf_thres": 0.5,
         "num_classes": 3,
+        "max_objects": 1,
     }
 
     size_specific_configs = {
@@ -288,13 +310,13 @@ class ObjectDetectionHead(ModelInterfaceBase, ObjectDetector):
         self._output_signature = {
             MH_OBJECT_DETECTION_LABELS: (
                 batch_size,
-                None,
+                self.cfg["max_objects"],
             ),
             MH_OBJECT_DETECTION_SCORES: (
                 batch_size,
-                None,
+                self.cfg["max_objects"],
             ),
-            MH_OBJECT_DETECTION_BOXES_NORMALIZED: (batch_size, None, 4),
+            MH_OBJECT_DETECTION_BOXES_NORMALIZED: (batch_size, self.cfg["max_objects"], 4),
         }
         super().__init__(**self.cfg)
 
