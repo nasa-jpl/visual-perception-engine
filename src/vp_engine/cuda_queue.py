@@ -79,6 +79,7 @@ class CUDAQueue(FIFOQueueInterface):
         self._output_slot = self._queue[0].get_non_shared_empty_memory_slot(
             self.output_device
         )  # memory slot where the output will be written, initialized in the child processes
+        self.new_slot_needed = False
 
         self._position_locks = [mp.Lock() for _ in range(max_size)]
         self._front_ind = mp.Value("i", 0)
@@ -160,7 +161,7 @@ class CUDAQueue(FIFOQueueInterface):
         if transmit_error:
             raise RuntimeError("Failed to receive the shared memory handles.")
 
-    def put_nowait(self, item: dict[str, torch.Tensor], item_id: int) -> None:
+    def put_nowait(self, item: dict[str, torch.Tensor], item_id: int, sync:bool = False) -> None:
         """Put item in the queue immediately. Should raise an exception if the queue is full."""
         with self._current_size.get_lock(), self._front_ind.get_lock():
             if self._current_size.value == self.max_size:
@@ -172,17 +173,18 @@ class CUDAQueue(FIFOQueueInterface):
 
             self._position_locks[ind].acquire()
 
-        self._queue[ind].write(item, item_id, True)
+        self._queue[ind].write(item, item_id, sync)
         self._position_locks[ind].release()
 
     def get_nowait(self) -> tuple[int, torch.Tensor]:
         """Get the oldest item from the queue immediately. Should raise an exception if the queue is empty."""
-        if self._output_slot is None or self.output_device == "cpu":
+        if self._output_slot is None or (self.output_device == "cpu" and self.new_slot_needed):
             self._output_slot = self._queue[0].get_non_shared_empty_memory_slot(self.output_device)
 
         with self._current_size.get_lock():
             if self._current_size.value == 0:
                 raise Empty
+            
 
             with self._front_ind.get_lock():
                 ind = self._front_ind.value
@@ -192,6 +194,7 @@ class CUDAQueue(FIFOQueueInterface):
                 self._position_locks[ind].acquire()
 
         item_id, item = self._queue[ind].read(self._output_slot, self.reading_synchronised)
+        self.new_slot_needed = True
         self._position_locks[ind].release()
 
         return item_id, item
