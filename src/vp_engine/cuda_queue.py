@@ -177,7 +177,7 @@ class CUDAQueue(FIFOQueueInterface):
 
     def get_nowait(self) -> tuple[int, torch.Tensor]:
         """Get the oldest item from the queue immediately. Should raise an exception if the queue is empty."""
-        if self._output_slot is None:
+        if self._output_slot is None or self.output_device == "cpu":
             self._output_slot = self._queue[0].get_non_shared_empty_memory_slot(self.output_device)
 
         with self._current_size.get_lock():

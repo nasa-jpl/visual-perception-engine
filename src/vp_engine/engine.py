@@ -393,9 +393,6 @@ class Engine:
             n, output = self.output_queues[head_id].get_nowait()
             self.logger.info(MESSAGE.OUTPUT_RECEIVED.format(n=n, head_name=self.model_heads[head_id].name))
 
-            output = {k: v.clone() for k, v in output.items()}
-            self.logger.info(MESSAGE.OUTPUT_CLONED.format(n=n, head_name=self.model_heads[head_id].name))
-
         except Empty:
             return {}
 

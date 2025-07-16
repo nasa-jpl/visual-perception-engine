@@ -182,7 +182,7 @@ class CUDATimeBuffer(TimeBufferInterface):
 
     def get(self, last_timestamp: float, sync: bool = False) -> None | tuple[int, float, torch.Tensor]:
         # initialize the output slot the first time it is needed
-        if self._output_slot is None:
+        if self._output_slot is None or self.output_device == "cpu":
             self._output_slot = self._buffer[0].get_non_shared_empty_memory_slot(self.output_device)
 
         newest_idx = self._newest_idx.value
