@@ -303,7 +303,7 @@ def export_default_models(registry_path = MODEL_REGISTRY_RELATIVE):
         if framework != "tensorrt":
             name, model_card = exporter.export(
                 precision,
-                "torch_compile",  # object detection heads cannot be converted to TensorRT
+                framework,  # object detection heads cannot be converted to TensorRT
                 ObjectDetectionHead,
                 init_arguments={"encoder_size": encoder_size},
                 weights_path=f"object_detection_head_{encoder_size}.pth",
