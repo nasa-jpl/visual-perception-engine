@@ -1,18 +1,15 @@
 import os
-import shutil
 import signal
-from argparse import ArgumentParser
 from queue import Empty, Full
 from time import perf_counter, sleep
 from typing import Literal
 
-import cv2
 import numpy as np
 import torch
 import torch.multiprocessing as mp
 from cuda import cuda
 
-import model_architectures, transforms
+import transforms
 from model_management.model_cards import ModelCard, ModelHeadCard
 from model_management.registry import ModelRegistry
 from model_management.util import PRECISION_MAP_TORCH
@@ -22,12 +19,10 @@ from vp_engine.cuda_queue import CUDAQueue
 from vp_engine.cuda_utils import checkCudaErrors
 from vp_engine.dynamic_shape_queue import DynamicShapeQueue
 from vp_engine.foundation_model import FoundationModel
-from vp_engine.log_analyzer import LogAnalyzer
 from utils.logging_utils import MESSAGE, create_logger
 from vp_engine.model_head import ModelHead
 from utils.naming_convention import *
 from utils.shape_utils import is_io_compatible
-from vp_engine.threading_utils import QueueReceiverThread
 from transforms import AbstractPostprocessing, AbstractPreprocessing
 
 # NOTE This will not work from within an installed package

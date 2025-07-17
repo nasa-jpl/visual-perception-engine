@@ -10,8 +10,8 @@ models/*
 plots/*
 model_registry/*
 outputs/*
-runs/*
-logs/*
+*/runs/*
+*/logs/*
 scratch/*
 resources/*
 !resources/prepare_resources.sh
@@ -20,6 +20,7 @@ resources/*
 /build
 /install
 /log
+**/log.txt
 
 src/vp_engine/build
 src/vp_engine/install
