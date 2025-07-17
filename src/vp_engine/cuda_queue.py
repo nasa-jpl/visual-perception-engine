@@ -161,7 +161,7 @@ class CUDAQueue(FIFOQueueInterface):
         if transmit_error:
             raise RuntimeError("Failed to receive the shared memory handles.")
 
-    def put_nowait(self, item: dict[str, torch.Tensor], item_id: int, sync:bool = False) -> None:
+    def put_nowait(self, item: dict[str, torch.Tensor], item_id: int, sync:bool = True) -> None:
         """Put item in the queue immediately. Should raise an exception if the queue is full."""
         with self._current_size.get_lock(), self._front_ind.get_lock():
             if self._current_size.value == self.max_size:
