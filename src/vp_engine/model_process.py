@@ -4,6 +4,7 @@ from time import perf_counter, sleep
 import signal
 
 import logging
+import torch
 from cuda import cuda
 from torch.multiprocessing import Process, Event, Value
 
@@ -52,6 +53,9 @@ class ModelProcess(Process, ABC):
         self.kill_switch = Event()
         self.loaded_flag = Event()
         self.proceed_flag = Event()
+        
+        # streams will be initialized later
+        self.stream = None
 
     ### BACKEND ###
 
@@ -63,41 +67,47 @@ class ModelProcess(Process, ABC):
 
         checkCudaErrors(cuda.cuInit(0))
         self.logger = self.get_logger__()
+        
         self.input_queue.recv_shareable_handles()
         self.output_queue.recv_shareable_handles()
+        
+        self.stream = torch.cuda.Stream(priority=-1)
+        
         self.load_model__()
         self.loaded_flag.set()  # Signal that the model has been loaded
 
         self.proceed_flag.wait()  # Wait for the signal to start inference
 
         leftover_sleep_time = 0 if self.frequency.value > 0 else self.maximum_sleep_duration
-        while not self.kill_switch.is_set():
-            if leftover_sleep_time <= 0:
-                inference_start_t = perf_counter()
-                inference_success = self.inference_procedure__()
+        
+        with torch.cuda.stream(self.stream):
+            while not self.kill_switch.is_set():
+                if leftover_sleep_time <= 0:
+                    inference_start_t = perf_counter()
+                    inference_success = self.inference_procedure__()
 
-                if inference_success:
-                    # if the inference was executed successfuly, calculate sleeping duration to match required rate
-                    with self.frequency.get_lock():
-                        # it is possible that the frequency has been changed during the inference, hence we need to account for that
-                        time_interval = (
-                            1 / self.frequency.value if self.frequency.value > 0 else self.maximum_sleep_duration
-                        )
+                    if inference_success:
+                        # if the inference was executed successfuly, calculate sleeping duration to match required rate
+                        with self.frequency.get_lock():
+                            # it is possible that the frequency has been changed during the inference, hence we need to account for that
+                            time_interval = (
+                                1 / self.frequency.value if self.frequency.value > 0 else self.maximum_sleep_duration
+                            )
 
-                    leftover_sleep_time += max(0, time_interval - (perf_counter() - inference_start_t))
+                        leftover_sleep_time += max(0, time_interval - (perf_counter() - inference_start_t))
 
-                else:
-                    # if the inference failed (due to lack of input) we will attempt to perform inference again immediately
-                    leftover_sleep_time = 0
+                    else:
+                        # if the inference failed (due to lack of input) we will attempt to perform inference again immediately
+                        leftover_sleep_time = 0
 
-            # sleep for the remaining time
-            sleep_duration = min(leftover_sleep_time, self.maximum_sleep_duration)
-            sleep(sleep_duration)
-            leftover_sleep_time -= sleep_duration
+                # sleep for the remaining time
+                sleep_duration = min(leftover_sleep_time, self.maximum_sleep_duration)
+                sleep(sleep_duration)
+                leftover_sleep_time -= sleep_duration
 
-            # if the frequency is set to 0, we should sleep for the maximum_sleep_duration
-            if self.frequency.value == 0:
-                leftover_sleep_time = self.maximum_sleep_duration
+                # if the frequency is set to 0, we should sleep for the maximum_sleep_duration
+                if self.frequency.value == 0:
+                    leftover_sleep_time = self.maximum_sleep_duration
 
     @abstractmethod
     def inference_procedure__(self) -> bool:

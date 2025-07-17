@@ -37,7 +37,6 @@ class CUDATimeBuffer(TimeBufferInterface):
         input_device: Literal["cpu", "cuda"],
         output_device: Literal["cpu", "cuda"],
         data_signature: dict[str, tuple[int]],
-        reading_synchronised: bool = True,  # set to false if after reading all operations are performed in the same stream
         is_original_process: bool = True,
         device_id: int = 0,
         add_batch_dim: bool = False,
@@ -53,7 +52,6 @@ class CUDATimeBuffer(TimeBufferInterface):
         self.is_original_process = is_original_process
         self.device_id = device_id
         self.add_batch_dim = add_batch_dim
-        self.reading_synchronised = reading_synchronised
         self.logger = mp.get_logger()
 
         self._buffer = [
@@ -79,6 +77,8 @@ class CUDATimeBuffer(TimeBufferInterface):
         os.set_inheritable(child_sock.fileno(), True)
         self._parent_sock = parent_sock
         self._child_sock = child_sock
+        
+        self.writeLock = LockedBufferWriter(self)
 
     def __getstate__(self):
         """Return the state of the object for pickling. Intended to be used only when passing the object to a child process.
@@ -160,18 +160,18 @@ class CUDATimeBuffer(TimeBufferInterface):
         for k, v in self._buffer[0].effective_data_signature.items():
             self._output_slot[k] = torch.empty(*v, dtype=self.dtype, device=self.device)
 
-    def put(self, item: dict[str, torch.Tensor], item_id: int) -> None:
+    def put(self, item: dict[str, torch.Tensor], item_id: int, sync=True) -> None:
         with self._oldest_idx.get_lock():
             oldest_idx = self._oldest_idx.value
             self._oldest_idx.value = (oldest_idx + 1) % self.max_size
 
         with self._position_locks[oldest_idx]:
-            self._buffer[oldest_idx].write(item, item_id, True)
+            self._buffer[oldest_idx].write(item, item_id, sync)
 
         with self._newest_idx.get_lock():
             self._newest_idx.value = oldest_idx
 
-    def get(self, last_timestamp: float) -> None | tuple[int, float, torch.Tensor]:
+    def get(self, last_timestamp: float, sync: bool = False) -> None | tuple[int, float, torch.Tensor]:
         # initialize the output slot the first time it is needed
         if self._output_slot is None:
             self._output_slot = self._buffer[0].get_non_shared_empty_memory_slot(self.output_device)
@@ -181,28 +181,70 @@ class CUDATimeBuffer(TimeBufferInterface):
             timestamp = self._buffer[newest_idx].get_timestamp()
             if timestamp == float("-inf") or timestamp <= last_timestamp:
                 return None
-            return self._buffer[newest_idx].read(self._output_slot, self.reading_synchronised)
+            return self._buffer[newest_idx].read(self._output_slot, sync)
+    
+    def get_nowait(self, last_timestamp: float, sync: bool = False) -> None | tuple[int, float, torch.Tensor]:
+        # initialize the output slot the first time it is needed
+        if self._output_slot is None:
+            self._output_slot = self._buffer[0].get_non_shared_empty_memory_slot(self.output_device)
 
+        newest_idx = self._newest_idx.value
+        with nonblocking(self._position_locks[newest_idx]) as locked:
+            if locked:
+                timestamp = self._buffer[newest_idx].get_timestamp()
+                if timestamp == float("-inf") or timestamp <= last_timestamp:
+                    return None
+                return self._buffer[newest_idx].read(self._output_slot, sync)
+            else:
+                return None
 
-# consumer
-def worker(buffer: CUDATimeBuffer, process_id: int):
-    import time
-
-    _ = create_logger()
-    checkCudaErrors(cuda.cuInit(0))
-    cuContext = checkCudaErrors(cuda.cuCtxCreate(0, buffer.device))
-    buffer.recv_shareable_handles()
-    start_time = time.perf_counter()
-    last_timestamp = float("-inf")
-    while time.perf_counter() - start_time < 10:
-        item = buffer.get(last_timestamp)
-        if item is not None:
-            buffer.logger.info(f"Received: {item[0]}")
-            last_timestamp = item[1]
-    checkCudaErrors(cuda.cuCtxDestroy(cuContext))
+class LockedBufferWriter:
+    def __init__(self, buffer: CUDATimeBuffer):
+        self.buffer = buffer
+        self.current_lock = None
+        self.oldest_idx = None        
+        self.identifier = None
+    
+    def __call__(self, identifier):
+            self.identifier = identifier
+            return self
+    
+    def __enter__(self):
+        with self.buffer._oldest_idx.get_lock():
+            self.oldest_idx = self.buffer._oldest_idx.value
+            self.buffer._oldest_idx.value = (self.oldest_idx + 1) % self.buffer.max_size
+        
+        self.current_lock = self.buffer._position_locks[self.oldest_idx]
+        self.current_lock.acquire()
+        
+        return self.buffer._buffer[self.oldest_idx].memory_dict
+            
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.buffer._buffer[self.oldest_idx].timestamp.value = time.perf_counter()
+        self.buffer._buffer[self.oldest_idx].id.value = self.identifier
+        self.current_lock.release()
+        with self.buffer._newest_idx.get_lock():
+            self.buffer._newest_idx.value = self.oldest_idx
 
 
 if __name__ == "__main__":
+    # consumer
+    def worker(buffer: CUDATimeBuffer, process_id: int):
+        import time
+
+        _ = create_logger()
+        checkCudaErrors(cuda.cuInit(0))
+        cuContext = checkCudaErrors(cuda.cuCtxCreate(0, buffer.device))
+        buffer.recv_shareable_handles()
+        start_time = time.perf_counter()
+        last_timestamp = float("-inf")
+        while time.perf_counter() - start_time < 10:
+            item = buffer.get(last_timestamp)
+            if item is not None:
+                buffer.logger.info(f"Received: {item[0]}")
+                last_timestamp = item[1]
+        checkCudaErrors(cuda.cuCtxDestroy(cuContext))
+        
     import time
 
     mp.set_start_method("spawn")

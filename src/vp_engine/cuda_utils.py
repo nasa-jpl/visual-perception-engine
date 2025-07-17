@@ -33,6 +33,14 @@ def checkCudaErrors(result):
         return result[1:]
 
 
+class TorchLikeMemorySlot:
+    def __init__(self, dptr, shape):
+        self.dptr = dptr
+        self.shape = shape
+    
+    def data_ptr(self):
+        return self.dptr
+
 class CUDASharedMemorySlot:
     """This class is a container for a set of cuda tensors characterized by the data signature.
     WARNING: this class is not thread-safe."""
@@ -93,7 +101,7 @@ class CUDASharedMemorySlot:
                     self.logger.error("Failed to allocate shareable memory")
                     raise RuntimeError("Failed to allocate shareable memory")
 
-                self._memory[key] = dptr
+                self._memory[key] = TorchLikeMemorySlot(dptr, value)
                 assert self.allocated_nbytes[key] == allocated_nbytes, (
                     "Empirical allocation size does not match expected value"
                 )
@@ -130,13 +138,17 @@ class CUDASharedMemorySlot:
     @property
     def device(self):
         return checkCudaErrors(cuda.cuDeviceGet(self.device_id))
+    
+    @property
+    def memory_dict(self):
+        return self._memory
 
     def send_shareable_handles(self, parent_socket, child_pid):
         for value in self.shareable_handles.values():
             reduction.send_handle(parent_socket, value, child_pid)
 
     def receive_shareable_handles(self, child_socket):
-        for key in self.data_signature.keys():
+        for key, shape in self.data_signature.items():
             # NOTE: this introduces blocking behavior
             shareable_handle = reduction.recv_handle(child_socket)
 
@@ -146,7 +158,7 @@ class CUDASharedMemorySlot:
                 self.logger.error("Failed to import shareable handle")
                 raise RuntimeError("Failed to import shareable handle")
 
-            self._memory[key] = dptr
+            self._memory[key] = TorchLikeMemorySlot(dptr, shape)
 
     def write(self, source: dict[str, torch.Tensor], sync: bool = True):
         stream_identifier = torch.cuda.current_stream().cuda_stream  # use the same stream for torch and cuda operations
@@ -155,17 +167,18 @@ class CUDASharedMemorySlot:
             assert value.shape == self.effective_data_signature[key], (
                 f"Shape mismatch for key {key}. Expected {self.effective_data_signature[key]}, got {value.shape}"
             )
-            checkCudaErrors(cpy(self._memory[key], value.data_ptr(), self.original_nbytes[key], stream_identifier))
+            checkCudaErrors(cpy(self._memory[key].data_ptr(), value.data_ptr(), self.original_nbytes[key], stream_identifier))
 
         if sync:
             # Synchronize the stream, 0 indicated default stream
             checkCudaErrors(cuda.cuStreamSynchronize(stream_identifier))
 
-    def read(self, destination: dict[str, torch.Tensor], sync: bool = True):
+    def read(self, destination: dict[str, torch.Tensor], sync: bool = True):  
         """Read the data from the shared memory to the destination tensors."""
         stream_identifier = torch.cuda.current_stream().cuda_stream  # use the same stream for torch and cuda operations
         cpy = cuda.cuMemcpyDtoHAsync if list(destination.values())[0].device.type == "cpu" else cuda.cuMemcpyDtoDAsync
-        for key, shmem_ptr in self._memory.items():
+        for key, value in self._memory.items():
+            shmem_ptr = value.data_ptr()
             checkCudaErrors(cpy(destination[key].data_ptr(), shmem_ptr, self.original_nbytes[key], stream_identifier))
             assert destination[key].shape == self.effective_data_signature[key], (
                 f"Shape mismatch for key {key}. Expected {self.effective_data_signature[key]}, got {destination[key].shape}"
@@ -178,13 +191,14 @@ class CUDASharedMemorySlot:
     def get_non_shared_empty_memory_slot(self, device: Literal["cpu", "cuda"]) -> dict[str, torch.Tensor]:
         """Return a dictionary containing empty tensors with the same shape as the data signature."""
         data = {}
+        kwargs = {} if device == "cuda" else {"pin_memory": True}
         for key, value in self.effective_data_signature.items():
-            data[key] = torch.empty(size=value, dtype=self.dtype, device=device)
+            data[key] = torch.empty(size=value, dtype=self.dtype, device=device, **kwargs)
         return data
 
     def close(self):
         for key, value in self._memory.items():
-            self.cleanup_memory(value, self.allocated_nbytes[key])
+            self.cleanup_memory(value.data_ptr(), self.allocated_nbytes[key])
 
     def check_system_properties(self) -> bool:
         # Check that the selected device supports virtual address management
