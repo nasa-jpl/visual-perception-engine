@@ -4,6 +4,7 @@ import socket
 import multiprocessing as mp
 from abc import ABC, abstractmethod
 from typing import Literal
+from contextlib import contextmanager
 
 import torch
 from cuda import cuda
@@ -11,6 +12,14 @@ from cuda import cuda
 from vp_engine.cuda_utils import CUDASharedMemorySlotWithIDAndTimestamp, checkCudaErrors
 from utils.logging_utils import create_logger
 
+@contextmanager
+def nonblocking(lock):
+    locked = lock.acquire(False)
+    try:
+        yield locked
+    finally:
+        if locked:
+            lock.release()
 
 class TimeBufferInterface(ABC):
     @abstractmethod
