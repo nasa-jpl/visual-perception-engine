@@ -328,7 +328,8 @@ class Engine:
             while len(outputs) < len(test_inputs) and perf_counter() - start_time < max_test_time:
                 try:
                     output_dict = self.get_head_output(head_idx)
-                    outputs.append(output_dict)
+                    if output_dict is not None:
+                        outputs.append(output_dict)
                 except Empty:
                     pass
 
