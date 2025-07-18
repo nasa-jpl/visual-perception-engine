@@ -95,27 +95,16 @@ def run_baseline_benchmark(
     # Load postprocessing functions for each head
     postprocessing = []
     for head_config in heads_config:
-        if "merged" not in framework:
-            head_card = registry.get_registered_models()[head_config["canonical_name"]]
-            postproc_name = head_config.get("postprocessing_function", "DefaultPostprocessing")
-            postproc_class = getattr(transforms, postproc_name)
-            
-            postproc_instance = postproc_class(
-                mh_signature=head_card.output_signature,
-                mh_type=PRECISION_MAP_TORCH[head_card.precision],
-                canonical_height=input_shape[0],
-                canonical_width=input_shape[1],
-            )
-        else:
-            postproc_name = head_config.get("postprocessing_function", "DefaultPostprocessing")
-            postproc_class = getattr(transforms, postproc_name)
-            
-            postproc_instance = postproc_class(
-                mh_signature=fm_card.output_signature,
-                mh_type=PRECISION_MAP_TORCH[fm_card.precision],
-                canonical_height=input_shape[0],
-                canonical_width=input_shape[1],
-            )
+        head_card = registry.get_registered_models()[head_config["canonical_name"]]
+        postproc_name = head_config.get("postprocessing_function", "DefaultPostprocessing")
+        postproc_class = getattr(transforms, postproc_name)
+        
+        postproc_instance = postproc_class(
+            mh_signature=head_card.output_signature,
+            mh_type=PRECISION_MAP_TORCH[head_card.precision],
+            canonical_height=input_shape[0],
+            canonical_width=input_shape[1],
+        )
         postprocessing.append(postproc_instance)
 
     # Define inference logic based on framework
@@ -145,11 +134,12 @@ def run_baseline_benchmark(
         merged_model = registry.load_model(fm_name)
         postproc = postprocessing[0]
         def inference(gpu_tensor):
-            preprocessed = preprocessing({PREPROCESSING_INPUT: gpu_tensor})
-            output = merged_model.forward_annotated(preprocessed)
-            postprocessed_output = postproc(output)
-            for key in postprocessed_output:
-                _ = postprocessed_output[key].cpu()
+            for i, (head, postproc) in enumerate(zip(model_heads, postprocessing)):
+                preprocessed = preprocessing({PREPROCESSING_INPUT: gpu_tensor})
+                output = head.forward_annotated(preprocessed)
+                postprocessed_output = postproc(output)
+                for key in postprocessed_output:
+                    _ = postprocessed_output[key].cpu()
 
     for image in tqdm(images, desc=f"Processing with {framework}"):
         start_time = time.perf_counter()
@@ -223,12 +213,12 @@ def main():
     model_type = "tensorrt" if "tensorrt" in args.framework else "torch"
     
     # Prepare model configurations for baselines
+    num_heads = args.num_heads
     if "merged" in args.framework:
-        fm_config = {"canonical_name": f"DepthAnythingV2_vits_{model_type}_fp16"}
-        heads_config = [] 
-        num_heads = 1
+        postproc_name = "ResizeAndToCV2Image"
+        fm_config = {"canonical_name": f"DepthAnythingV2_vits_{model_type}_fp16", "postprocessing_function": postproc_name}
+        heads_config = [fm_config]* num_heads
     else:
-        num_heads = args.num_heads
         fm_config = {"canonical_name": f"DinoFoundationModel_fp16_{model_type}__encoder_size_vits__ignore_xformers_True"}
         if args.obj_det_heads:
             head_name = "ObjectDetectionHead_fp16_torch__encoder_size_vits"
