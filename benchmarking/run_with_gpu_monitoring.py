@@ -96,6 +96,9 @@ def main():
     cmd = docker_cmd + cd_cmd + [args.container] + exec_cmd
     
     tmp_file = "tmp.csv"
+    if os.path.isfile(tmp_file):
+        os.remove(tmp_file)
+        
     try:
         with GPUMonitoring(tmp_file):
             subprocess.run(cmd, check=True)
