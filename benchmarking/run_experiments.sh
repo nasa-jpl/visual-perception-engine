@@ -1,5 +1,23 @@
 #!/usr/bin/env bash
 
+# make sure that jetson is set to maximum power mode
+sudo nvpmodel -m 0
+
+# make sure that fan is set to maximum speed
+sudo jetson_clocks --fan
+
+# make sure CUDA MPS is on
+export CUDA_VISIBLE_DEVICES=0 # Select GPU 0
+export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps
+export CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-mps/log
+
+# make sure that the directories exist and have correct permissions
+sudo mkdir -p $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
+sudo chown $USER $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
+
+# Start the daemon
+nvidia-cuda-mps-control -d
+
 frameworks=(
   vp_engine
   fully_sequential_torch
