@@ -3,20 +3,20 @@
         "preprocessing_function": "DINOV2PreprocessingTorch",
         "canonical_name": "DinoFoundationModel_fp16_tensorrt__encoder_size_vits__ignore_xformers_True",
         "alias": "DINOV2",
-        "rate": 60
+        "rate": 100
         },
     "model_heads": [
         {
             "canonical_name": "DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits",
             "alias": "DepthAnythingV2DepthHead",
             "postprocessing_function": "ResizeAndToCV2Image",
-            "rate": 60
+            "rate": 100
         },
         {
             "canonical_name": "DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits",
             "alias": "DepthAnythingV2DepthHead2",
             "postprocessing_function": "ResizeAndToCV2Image",
-            "rate": 60
+            "rate": 100
         }
     ],
     "logging": {
