@@ -3,28 +3,28 @@
         "preprocessing_function": "DINOV2PreprocessingTorch",
         "canonical_name": "DinoFoundationModel_fp16_tensorrt__encoder_size_vits__ignore_xformers_True",
         "alias": "DINOV2",
-        "rate": 100
+        "rate": 40
         },
     "model_heads": [
         {
             "canonical_name": "ObjectDetectionHead_fp16_torch__encoder_size_vits",
             "alias": "ObjectDetectionHead",
-            "rate": 100
+            "rate": 40
         },
         {
             "canonical_name": "ObjectDetectionHead_fp16_torch__encoder_size_vits",
             "alias": "ObjectDetectionHead2",
-            "rate": 100
+            "rate": 40
         },
         {
             "canonical_name": "ObjectDetectionHead_fp16_torch__encoder_size_vits",
             "alias": "ObjectDetectionHead3",
-            "rate": 100
+            "rate": 40
         },
         {
             "canonical_name": "ObjectDetectionHead_fp16_torch__encoder_size_vits",
             "alias": "ObjectDetectionHead4",
-            "rate": 100
+            "rate": 40
         }
     ],
     "logging": {
