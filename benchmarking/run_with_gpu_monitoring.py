@@ -68,7 +68,7 @@ def main():
     parser.add_argument(
         "--output_file_speed",
         type=str,
-        default="results_speed.jsonl",
+        default="results_speed_outside_container.jsonl",
         help="Path to the output JSONL file for speed results.",
     )
     parser.add_argument(
