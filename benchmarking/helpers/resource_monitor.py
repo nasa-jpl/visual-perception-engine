@@ -3,7 +3,6 @@ import os
 import time
 import json
 import multiprocessing
-import torch
 # import pycuda.driver as cuda
 from contextlib import contextmanager
 from jtop import jtop, JtopException
@@ -31,23 +30,13 @@ def Duration():
         print("Total time:", time.perf_counter() - start)
 
 
-def monitor_gpu_memory(rounded=False):
-    # Get the current free and total memory on the GPU
-    free, total = cuda.mem_get_info()
-    # Calculate the used memory
-    used = total - free
-    return B2GB(used, rounded), B2GB(total, rounded)
-
-
-@contextmanager
-def monitor_jtop_process(event, log_dir=""):
-    filepath = os.path.join(log_dir, "resource_usage.csv")
+def monitor_jtop_process(event, output_filepath="resource_usage.csv"):
     try:
         with jtop(
             interval=0.5
         ) as jetson:  # smallest interval recommended by https://github.com/rbonghi/jetson_stats/issues/414
             # Make csv file and setup csv
-            with open(filepath, "w") as csvfile:
+            with open(output_filepath, "w") as csvfile:
                 stats = jetson.stats
                 # Initialize cws writer ["gpu load", "gpu memory", "used_ram"]
                 stat_keys = [key for key in stats.keys() if key in [f"CPU{i}" for i in range(1, 13)]]
@@ -73,9 +62,8 @@ def monitor_jtop_process(event, log_dir=""):
     except IOError as e:
         print("I/O error occured during resource monitoring: ", e)
 
-
 @contextmanager
-def ResourceMonitoring(log_dir=""):
+def GPUMonitoring(output_filepath):
     """
     Context manager to run jtop in a separate process to monitor system resources.
 
@@ -83,12 +71,39 @@ def ResourceMonitoring(log_dir=""):
     :param duration: Duration in seconds to run the monitoring.
     """
     # create directory if not
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir, exist_ok=True)
+    output_dir = os.path.dirname(os.path.abspath(output_filepath))
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
 
     # Create the process for monitoring
     e = multiprocessing.Event()
-    process = multiprocessing.Process(target=monitor_jtop_process, args=(e, log_dir))
+    process = multiprocessing.Process(target=monitor_jtop_process, args=(e, output_filepath))
+    process.start()
+
+    try:
+        yield
+    finally:
+        e.set()
+        process.join()
+        process.terminate()
+        print("Monitoring process finished.")
+
+
+@contextmanager
+def ResourceMonitoring(output_filepath):
+    """
+    Context manager to run jtop in a separate process to monitor system resources.
+
+    :param output_file: File path to store monitoring data.
+    :param duration: Duration in seconds to run the monitoring.
+    """
+    # create directory if not
+    if not os.path.exists(output_filepath):
+        os.makedirs(output_filepath, exist_ok=True)
+
+    # Create the process for monitoring
+    e = multiprocessing.Event()
+    process = multiprocessing.Process(target=monitor_jtop_process, args=(e, output_filepath))
     process.start()
 
     # Yield control back to the caller
@@ -102,9 +117,8 @@ def ResourceMonitoring(log_dir=""):
         e.set()
         process.join()
         process.terminate()
-
         # save extra metrics
-        with open(os.path.join(log_dir, "metrics.json"), "w") as f:
+        with open(os.path.join(os.path.dirname(os.path.abspath(output_filepath)), "metrics.json"), "w") as f:
             json.dump(metrics, f)
 
         print("Monitoring process finished.")
@@ -123,6 +137,7 @@ def gpu_intensive_function(target_memory=1):
     assert target_memory <= 40, "For safety test memory of less than 40GB"
 
     from math import sqrt
+    import torch
 
     side_size = sqrt(GB2B(target_memory) / torch.float32.itemsize / 3)
     assert (side_size**2) * 3 * B2GB(torch.float32.itemsize) == target_memory
