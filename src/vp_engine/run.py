@@ -78,7 +78,7 @@ def measure_time(engine: Engine, max_wait_per_image_s: float = 60.0, example_inp
         print(f"Standard deviation of processing time: {std_dev_time:.4f} seconds")
 
 
-def stress_test(engine: Engine, n_inputs: int, time_interval: float, timeout: float):
+def stress_test(engine: Engine, n_inputs: int, time_interval: float, timeout: float, save_outputs: bool):
     from vp_engine.example_input import ExampleInput
 
     example_input = ExampleInput(
@@ -95,7 +95,7 @@ def stress_test(engine: Engine, n_inputs: int, time_interval: float, timeout: fl
     threads = []
     for i, output_queue in enumerate(engine.output_queues):
         thread = QueueReceiverThread(
-            output_queue, outputs[i], n_inputs, engine.model_heads[i].name, engine.logger, timeout=timeout
+            output_queue, outputs[i], n_inputs, engine.model_heads[i].name, engine.logger, timeout=timeout, store_output=save_outputs
         )
         threads.append(thread)
 
@@ -107,25 +107,27 @@ def stress_test(engine: Engine, n_inputs: int, time_interval: float, timeout: fl
     example_input.terminate()
 
     # Save the outputs to a file
-    engine.logger.info(MESSAGE.SAVING_OUTPUTS)
-    for i, head_output in enumerate(outputs):
-        head_dir = os.path.join(engine.config.output_dir, f"{engine.model_heads[i].name}")
-        if os.path.exists(head_dir):
-            shutil.rmtree(head_dir)
-        os.makedirs(head_dir)
+    
+    if save_outputs:
+        engine.logger.info(MESSAGE.SAVING_OUTPUTS)
+        for i, head_output in enumerate(outputs):
+            head_dir = os.path.join(engine.config.output_dir, f"{engine.model_heads[i].name}")
+            if os.path.exists(head_dir):
+                shutil.rmtree(head_dir)
+            os.makedirs(head_dir)
 
-        for n, output in head_output:
-            if not output:
-                continue
-            try:
-                head_cls = getattr(model_architectures, engine.model_heads[i].model_card.model_class_name)
-                original_image = torch.tensor(example_input.input_images[n % len(example_input.input_images)])
-                output_img = head_cls.visualize_output(output, original_image)
-                cv2.imwrite(os.path.join(head_dir, f"{n:04d}.png"), output_img)
-            except NotImplementedError:
-                break
+            for n, output in head_output:
+                if not output:
+                    continue
+                try:
+                    head_cls = getattr(model_architectures, engine.model_heads[i].model_card.model_class_name)
+                    original_image = torch.tensor(example_input.input_images[n % len(example_input.input_images)])
+                    output_img = head_cls.visualize_output(output, original_image)
+                    cv2.imwrite(os.path.join(head_dir, f"{n:04d}.png"), output_img)
+                except NotImplementedError:
+                    break
 
-    engine.logger.info(MESSAGE.OUTPUTS_SAVED)
+        engine.logger.info(MESSAGE.OUTPUTS_SAVED)
 
 
 if __name__ == "__main__":
@@ -143,6 +145,7 @@ if __name__ == "__main__":
     parser.add_argument("--n_inputs", type=int, default=100, help="Number of inputs to run the example with")
     parser.add_argument("--time_interval", type=float, default=1 / 30, help="Time interval between inputs")
     parser.add_argument("--timeout", type=float, default=10.0, help="Timeout for the example run")
+    parser.add_argument("--save_outputs", action="store_true", help="Flag to save outputs after stress test. !!! Takes additional memory")
     args = parser.parse_args()
 
     args.config = os.path.join(REPOSITORY_DIR, args.config)
@@ -167,7 +170,7 @@ if __name__ == "__main__":
         if args.measure_time:
             measure_time(engine)
         else:
-            stress_test(engine, n_inputs=args.n_inputs, time_interval=args.time_interval, timeout=args.timeout)
+            stress_test(engine, n_inputs=args.n_inputs, time_interval=args.time_interval, timeout=args.timeout, save_outputs=args.save_outputs)
 
     finally:
         engine.stop()
