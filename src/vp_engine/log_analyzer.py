@@ -4,6 +4,7 @@ from typing import Optional
 from datetime import datetime
 
 import pandas as pd
+from tqdm import tqdm
 
 pd.options.plotting.backend = "plotly"
 import numpy as np
@@ -128,7 +129,7 @@ class LogAnalyzer:
         results = {metric: [] for metric in self.metrics.keys()}
         results.update({metric: [] for metric in self.heads_metrics.keys()})
 
-        for id in sorted(available_ids):
+        for id in tqdm(sorted(available_ids), desc="Computing metrics"):
             id_df = df[df["image_id"] == id]
 
             for metric, (msg1, proc1, msg2, proc2) in self.metrics.items():
@@ -187,7 +188,7 @@ class LogAnalyzer:
         else:
             start_idx = engine_build_idxs[-1]
 
-        for idx, line in enumerate(log[start_idx:]):
+        for idx, line in enumerate(tqdm(log[start_idx:], desc="Parsing log")):
             match = re.search(r"\[(.*?)\] \|(\d+)\| ([\S ]*)", line)
             if not match:
                 if self.verbose:
