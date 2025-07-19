@@ -9,15 +9,15 @@ from jtop import jtop, JtopException
 
 
 def B2GB(n_bytes, round_3d=False):
-    return round(n_bytes / 1024**3, 3) if round_3d else n_bytes / 1024**3
+    return round(n_bytes / 1000**3, 3) if round_3d else n_bytes / 1000**3
 
 
-def MB2GB(n_bytes, round_3d=False):
-    return round(n_bytes / 1024**2, 3) if round_3d else n_bytes / 1024**2
+def KB2GB(n_bytes, round_3d=False):
+    return round(n_bytes / 1000**2, 3) if round_3d else n_bytes / 1000**2
 
 
 def GB2B(n_gb):
-    return n_gb * 1024**3
+    return n_gb * 1000**3
 
 
 @contextmanager

@@ -15,13 +15,13 @@ def analyse_gpu_memory(csv_file: str):
     Parse jtop CSV, find peak GPU‑memory usage minus baseline, and
     append a JSON‑line with the CLI arguments + result.
 
-    Returns the delta (float, GiB) so you can log or print it.
+    Returns the delta (float, GB) so you can log or print it.
     """
     baseline = peak = None
 
     with open(csv_file, newline="") as f:
         for i, row in enumerate(csv.DictReader(f)):
-            mem = float(row["gpu_memory"])      # already in GiB
+            mem = float(row["gpu_memory"])      # already in GB
             if i == 0:
                 baseline = peak = mem           # first line = baseline
             else:
@@ -108,8 +108,8 @@ def main():
             "framework":     args.framework,
             "num_heads":     args.num_heads,
             "obj_det_heads": args.obj_det_heads,
-            "peak_gpu_mem_GiB": round(peak_memory_usage, 4),
-            "baseline_gpu_mem_GiB": round(memory_usage_at_start, 4)
+            "peak_gpu_mem_GB": round(peak_memory_usage, 4),
+            "baseline_gpu_mem_GB": round(memory_usage_at_start, 4)
         }
         
         gpu_results_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), args.output_file_gpu_monitoring)
