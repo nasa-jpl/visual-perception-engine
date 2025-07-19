@@ -64,5 +64,5 @@ class ExampleInput(mp.Process):
             self.engine.input_image(img, counter)
             counter += 1
 
-            sleep_for = max(0, self.time_interval - (time.perf_counter() - start_t))
+            sleep_for = max(self.time_interval*0.8, self.time_interval - (time.perf_counter() - start_t))
             time.sleep(sleep_for)
