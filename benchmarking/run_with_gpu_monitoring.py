@@ -27,9 +27,7 @@ def analyse_gpu_memory(csv_file: str):
             else:
                 peak = max(peak, mem)
 
-    delta = peak - baseline
-
-    return delta
+    return peak, baseline
 
 def main():
     parser = ArgumentParser(description="Visual Perception Engine Performance Benchmark")
@@ -104,13 +102,14 @@ def main():
             subprocess.run(cmd, check=True)
 
         # Analyse results:
-        peak_memory_usage = analyse_gpu_memory(tmp_file)
+        peak_memory_usage, memory_usage_at_start = analyse_gpu_memory(tmp_file)
         
         record = {
             "framework":     args.framework,
             "num_heads":     args.num_heads,
             "obj_det_heads": args.obj_det_heads,
             "peak_gpu_mem_GiB": round(peak_memory_usage, 4),
+            "baseline_gpu_mem_GiB": round(memory_usage_at_start, 4)
         }
         
         gpu_results_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), args.output_file_gpu_monitoring)

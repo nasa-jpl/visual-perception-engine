@@ -78,7 +78,6 @@ def run_baseline_benchmark(
 
     # Load models directly from the config
     fm_name = fm_config["canonical_name"]
-    foundation_model = registry.load_model(fm_name) if "merged" not in framework else None
     model_heads = [registry.load_model(head["canonical_name"]) for head in heads_config]
     
     # Get model cards
@@ -109,8 +108,9 @@ def run_baseline_benchmark(
 
     # Define inference logic based on framework
     if "fully_sequential" in framework:
+        foundation_models = [registry.load_model(fm_name) for _ in heads_config]
         def inference(gpu_tensor):
-            for i, (head, postproc) in enumerate(zip(model_heads, postprocessing)):
+            for i, (foundation_model, head, postproc) in enumerate(zip(foundation_models, model_heads, postprocessing)):
                 preprocessed = preprocessing({PREPROCESSING_INPUT: gpu_tensor})
                 fm_output = foundation_model.forward_annotated(preprocessed)
                 head_output = head.forward_annotated(fm_output)
@@ -120,6 +120,7 @@ def run_baseline_benchmark(
                     _ = post_output[key].cpu()
 
     elif "head_sequential" in framework:
+        foundation_model = registry.load_model(fm_name)
         def inference(gpu_tensor):
             preprocessed = preprocessing({PREPROCESSING_INPUT: gpu_tensor})
             fm_output = foundation_model.forward_annotated(preprocessed)
