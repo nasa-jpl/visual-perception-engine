@@ -1,5 +1,5 @@
 services:
-  nn_engine:
+  visual-perception-engine:
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,7 +9,7 @@ services:
         _UID: '${_UID}'
         _GID: '${_GID}'
         USER: '${USER}'
-        ROS_WORKSPACE: '${ROS_WORKSPACE}'
+        WORKSPACE: '${WORKSPACE}'
         REPOS: '${REPOS}'
         BASE_IMAGE: 'dustynv/ros:humble-desktop-l4t-r36.4.0'
     ulimits:
@@ -22,7 +22,7 @@ services:
     cap_add:
       - SYS_NICE
     container_name: engine
-    image: nn_engine:latest
+    image: visual-perception-engine:latest
     runtime: nvidia
     privileged: true
     network_mode: host
@@ -34,7 +34,7 @@ services:
       - USER=$USER
 
     volumes:
-      - /home/${USER}/${ROS_WORKSPACE}:/home/${USER}/${ROS_WORKSPACE}
+      - /home/${USER}/${WORKSPACE}:/home/${USER}/${WORKSPACE}
       - /home/${USER}/rosbags:/home/${USER}/rosbags
       - /data/ros:/data/ros
       - /tmp/.X11-unix:/tmp/.X11-unix

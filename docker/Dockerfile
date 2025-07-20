@@ -12,7 +12,19 @@ RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/a
 
 RUN echo ${PACKAGE_NAME} > /etc/debian_chroot
 
+# Update the ROS 2 GPG key
+RUN rm /usr/share/keyrings/ros-archive-keyring.gpg
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+RUN apt update && \
+      apt install ros2-apt-source
+RUN rm /etc/apt/sources.list.d/ros2.list
+RUN rm /usr/share/keyrings/ros-archive-keyring.gpg
+
+
 ARG DEBIAN_FRONTEND=noninteractive
+# Set new pypi index since the original is down
+ENV PIP_INDEX_URL=https://pypi.jetson-ai-lab.io/jp6/cu126
+ENV PIP_EXTRA_INDEX_URL=https://pypi.ngc.nvidia.com
 
 RUN apt-get update && \
       apt-get -y install sudo
@@ -20,7 +32,13 @@ RUN apt-get update && \
 # Install pip packages
 RUN pip install tqdm plotly kaleido pandas nbformat ipykernel triton onnxruntime cuda-python onnx_graphsurgeon
 RUN pip install -U jetson-stats
-RUN pip install torch==2.4.0 torchvision==0.19.0a0+48b1edf
+
+# these are the original versions but they are currently unavailable
+# RUN pip install torch==2.4.0 torchvision==0.19.0a0+48b1edf
+
+RUN sudo apt remove python3-sympy 
+RUN pip install torch torchvision
+
 
 # this doesn't work for now, so we need to install torch2trt manually inside docker
 # Install torch2trt 

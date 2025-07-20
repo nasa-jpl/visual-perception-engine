@@ -1,4 +1,4 @@
-#include "nn_engine/engine_node.hpp"
+#include "vp_engine_ros/engine_node.hpp"
 #include <filesystem>
 #include <chrono>
 #include <functional>
@@ -76,7 +76,7 @@ EngineNode::EngineNode()
       timers_.push_back(timer);
     } else if (head.output_type == "object_detection") {
       // Publisher for object detection output.
-      auto pub = this->create_publisher<nn_engine::msg::ObjectDetectionOutput>(head.name, 10);
+      auto pub = this->create_publisher<vp_engine_ros::msg::ObjectDetectionOutput>(head.name, 10);
       auto timer = this->create_wall_timer(
           std::chrono::duration<double>(period_sec),
           [this, i, pub]() {
@@ -85,7 +85,7 @@ EngineNode::EngineNode()
             if (od_output.boxes.empty()) {
               return;
             }
-            nn_engine::msg::ObjectDetectionOutput msg;
+            vp_engine_ros::msg::ObjectDetectionOutput msg;
             msg.header.stamp = this->get_clock()->now();
             // Convert cv::Mat outputs to STL vectors.
             msg.labels = convertCvMatToIntVector(od_output.labels);
@@ -102,10 +102,10 @@ EngineNode::EngineNode()
   }
 
   // Service to change a model's firing rate.
-  change_rate_srv_ = this->create_service<nn_engine::srv::ChangeModelRate>(
+  change_rate_srv_ = this->create_service<vp_engine_ros::srv::ChangeModelRate>(
       "change_model_rate",
-      [this](const std::shared_ptr<nn_engine::srv::ChangeModelRate::Request> req,
-             std::shared_ptr<nn_engine::srv::ChangeModelRate::Response> res) {
+      [this](const std::shared_ptr<vp_engine_ros::srv::ChangeModelRate::Request> req,
+             std::shared_ptr<vp_engine_ros::srv::ChangeModelRate::Response> res) {
         bool success = engine_->change_model_rate(req->model_name, req->new_rate);
         res->success = success;
         if (success) {
@@ -118,10 +118,10 @@ EngineNode::EngineNode()
       });
 
   // Service to retrieve all model names.
-  get_model_names_srv_ = this->create_service<nn_engine::srv::GetModelNames>(
+  get_model_names_srv_ = this->create_service<vp_engine_ros::srv::GetModelNames>(
       "get_model_names",
-      [this](const std::shared_ptr<nn_engine::srv::GetModelNames::Request> /*req*/,
-             std::shared_ptr<nn_engine::srv::GetModelNames::Response> res) {
+      [this](const std::shared_ptr<vp_engine_ros::srv::GetModelNames::Request> /*req*/,
+             std::shared_ptr<vp_engine_ros::srv::GetModelNames::Response> res) {
         // Include the foundation model name as well as each model head name.
         auto foundation = engine_->getFoundationModelParams();
         auto heads = engine_->getModelHeadsParams();

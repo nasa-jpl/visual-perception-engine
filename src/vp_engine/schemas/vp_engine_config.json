@@ -1,0 +1,57 @@
+{
+    "$id": "/schemas/vp_engine_config.json",
+    "title": "NN Engine Configuration",
+    "description": "Specifies the configuration for the perception engine",
+    "type": "object",
+    "properties": {
+      "foundation_model": { 
+        "type": "object", 
+        "properties": {
+          "preprocessing_function": { "type": "string" },
+          "canonical_name": { "type": "string" },
+          "alias": { "type": "string" },
+          "rate": { "type": "integer" }
+        }, 
+        "required": ["canonical_name", "rate"] 
+      },
+      "model_heads": { 
+        "type": "array", 
+        "items": { 
+          "type": "object", 
+          "properties": {
+            "canonical_name": { "type": "string" },
+            "alias": { "type": "string" },
+            "postprocessing_function": { "type": "string" },
+            "rate": { "type": "integer" }
+            },
+          "required": ["canonical_name", "rate"] 
+        }
+      },
+      "logging": {
+        "type": "object",
+        "properties": {
+          "log_level": { "type": "string", "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] },
+          "log_to_console": { "type": "boolean", "default": true },
+          "log_file": { "type": ["string", "null"], "default": null }
+        },
+        "required": ["log_level"]
+      },
+      "output_dir": { "type": "string" },
+      "canonical_image_shape_whc": {
+        "type": "array",
+        "items": { "type": "integer" },
+        "minItems": 3,
+        "maxItems": 3
+      },
+      "queue_sizes": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "integer" },
+          "intermediate": { "type": "integer" },
+          "output": { "type": "integer" }
+        },
+        "required": ["input", "intermediate", "output"]
+      }
+    },
+    "required": ["foundation_model", "model_heads", "logging", "canonical_image_shape_hwc", "queue_sizes"]
+  }

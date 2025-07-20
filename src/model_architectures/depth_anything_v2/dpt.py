@@ -285,7 +285,7 @@ if __name__ == "__main__":
     model = DepthAnythingV2(ignore_xformers=True, **model_configs["vits"])
     model.load_state_dict(
         torch.load(
-            os.path.join("{ROS_WORKSPACE}/nn_engine/models/checkpoints/depth_anything_v2_vits.pth".format(**os.environ)),
+            os.path.join("models/checkpoints/depth_anything_v2_vits.pth".format(**os.environ)),
             map_location="cuda",
         )
     )

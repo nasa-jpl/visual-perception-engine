@@ -1,0 +1,58 @@
+{
+    "foundation_model": {
+        "preprocessing_function": "DINOV2PreprocessingTorch",
+        "canonical_name": "DinoFoundationModel_fp16_tensorrt__encoder_size_vits__ignore_xformers_True",
+        "alias": "DINOV2",
+        "rate": 100
+        },
+    "model_heads": [
+        {
+            "canonical_name": "DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits",
+            "alias": "DepthAnythingV2DepthHead",
+            "postprocessing_function": "ResizeAndToCV2Image",
+            "rate": 100
+        },
+        {
+            "canonical_name": "DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits",
+            "alias": "DepthAnythingV2DepthHead2",
+            "postprocessing_function": "ResizeAndToCV2Image",
+            "rate": 100
+        },
+        {
+            "canonical_name": "DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits",
+            "alias": "DepthAnythingV2DepthHead3",
+            "postprocessing_function": "ResizeAndToCV2Image",
+            "rate": 100
+        },
+        {
+            "canonical_name": "DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits",
+            "alias": "DepthAnythingV2DepthHead4",
+            "postprocessing_function": "ResizeAndToCV2Image",
+            "rate": 100
+        },
+        {
+            "canonical_name": "DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits",
+            "alias": "DepthAnythingV2DepthHead5",
+            "postprocessing_function": "ResizeAndToCV2Image",
+            "rate": 100
+        },
+        {
+            "canonical_name": "DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits",
+            "alias": "DepthAnythingV2DepthHead6",
+            "postprocessing_function": "ResizeAndToCV2Image",
+            "rate": 100
+        }
+    ],
+    "logging": {
+        "log_level": "INFO",
+        "log_to_console": true,
+        "log_file": "log.txt"
+    },
+    "canonical_image_shape_hwc": [1080, 1920, 3],
+    "queue_sizes":{ 
+        "input": 2,
+        "intermediate": 2,
+        "output": 10
+    },
+    "output_dir": "runs/engine_test"
+}

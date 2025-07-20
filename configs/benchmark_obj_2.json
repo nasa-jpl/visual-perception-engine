@@ -7,20 +7,13 @@
         },
     "model_heads": [
         {
-            "canonical_name": "DepthAnythingV2Head_fp16_tensorrt__encoder_size_vits",
-            "alias": "DepthAnythingV2DepthHead",
-            "postprocessing_function": "ResizeAndToCV2Image",
-            "rate": 40
-        },
-        {
             "canonical_name": "ObjectDetectionHead_fp16_torch__encoder_size_vits",
             "alias": "ObjectDetectionHead",
             "rate": 40
         },
         {
-            "canonical_name": "SemanticSegmentationHead_fp16_tensorrt__encoder_size_vits__dataset_voc2012",
-            "alias": "SemanticSegmentationHead",
-            "postprocessing_function": "SemSegPostprocessing",
+            "canonical_name": "ObjectDetectionHead_fp16_torch__encoder_size_vits",
+            "alias": "ObjectDetectionHead2",
             "rate": 40
         }
     ],

@@ -3,7 +3,7 @@
 #include <memory>
 #include <boost/python.hpp>
 
-#include "nn_engine/engine_node.hpp"
+#include "vp_engine_ros/engine_node.hpp"
 
 namespace bp = boost::python;
 

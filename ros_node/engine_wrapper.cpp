@@ -1,4 +1,4 @@
-#include "nn_engine/engine_wrapper.hpp"
+#include "vp_engine_ros/engine_wrapper.hpp"
 #include <boost/python.hpp>
 #include <boost/python/numpy.hpp>
 #include <iostream>
@@ -80,7 +80,7 @@ EngineWrapper::EngineWrapper(const std::string& package_dir,
     sys_path.attr("insert")(0, package_dir);
 
     // Import the 'src' module and get the Engine class.
-    bp::object src_module = bp::import("src");
+    bp::object src_module = bp::import("vp_engine");
     bp::object engine_cls = src_module.attr("Engine");
 
     // Create an engine instance (with embedded_in_ros2 set to true).

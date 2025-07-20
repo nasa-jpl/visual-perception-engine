@@ -22,10 +22,9 @@ Between all elements of the engine data should be exchanged in a dictionary form
 First, you will have to clone the repository:
 ```
 git clone https://github.com/nasa-jpl/visual-perception-engine
-
 ```
 
-If you want to use ROS2 node be careful where do you clone it. For more info see [the section on building ROS2 node](#ros2-node).
+If you want to use ROS2 node be careful where you clone it. For more info see [the section on building ROS2 node](#ros2-node).
 
 ### Set up docker
 For portability we used docker. Our environment is based on great work by [Dustin Franklin](https://github.com/dusty-nv). Firstly, export the following variables:
@@ -34,8 +33,11 @@ For portability we used docker. Our environment is based on great work by [Dusti
 export _UID=$(id -u)
 export _GID=$(id -g)
 
-# path to ros workspace to be mounted inside docker
-export ROS_WORKSPACE="Path/to/ros/workspace"
+# path to workspace (relative to /home/${USER}) to be mounted inside docker
+# if you are using only github repo
+export WORKSPACE="path/to/cloned/repo"
+# if you intend to use ros2 package
+export WORKSPACE="path/to/ros2/workspace"
 ```
  Secondly, navigate to the `docker/` directory and then run these commands:
 ```bash
@@ -59,12 +61,12 @@ python3 -m pip install .
 python3 -m pip install -e .
 ```
 
-Now you can verify that the package was successfully installed by running `pip show nn_engine`.
+Now you can verify that the package was successfully installed by running `pip show vp_engine`.
 
 ### Preparing model checkpoints
-To run the default version of the engine first you will have to download all the necessary checkpoints from [here](https://drive.google.com/drive/folders/13kJVAPz1CDynk-J3i-GRdUzOYa66j6vq?usp=drive_link) and place them into `models/checkpoints/` folder. Once there run this command:
+To run the default version of the engine first you will have to download all the necessary checkpoints from [here](https://drive.google.com/drive/folders/1SWMlEqOE_7EWPCkMloDTXG1_mZAmeW3-) and place them into `models/checkpoints/` folder. Once there run this command:
 ```bash
-python3 -c "import nn_engine; nn_engine.export_default_models()"
+python3 -c "import vp_engine; vp_engine.export_default_models()"
 ```
 This will export all the PyTorch models to TensorRT engines (stored in `models/engines` directory) and register all the models (i.e. add them to registry file `model_registry/registry.jsonl`) such that they can be easily loaded into the engine with desired parameters (e.g. precision)
 
@@ -77,19 +79,26 @@ The engine uses multiple processes each using the same GPU. To make it possible 
 ```bash
 #As $UID, run the commands
 
-export CUDA_VISIBLE_DEVICES=0 # Select GPU 0.
+export CUDA_VISIBLE_DEVICES=0 # Select GPU 0
+export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps
+export CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-mps/log
 
-export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps # Select a location that’s accessible to the given $UID
+# make sure that the directories exist and have correct permissions
+sudo mkdir -p $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
+sudo chown $USER $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
 
-export CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-log # Select a location that’s accessible to the given $UID
-
-nvidia-cuda-mps-control -d # Start the daemon.
+# Start the daemon
+nvidia-cuda-mps-control -d
 
 #This will start the MPS control daemon that will spawn a new MPS Server instance for that $UID starting an application and associate it with GPU visible to the control daemon.
+
+# In case you want to disable CUDA MPS
+echo quit | nvidia-cuda-mps-control
 ```
 
+
 ### Engine configuration
-Engine was made to be easily configurable. You can write your own configuration files based on your needs and use it with the engine. The config should be in `json` format and follow the schema defined in `schemas/nn_engine_config.json`. In `configs/` there is already a `default.json` configuration file which specifies default configuration with 3 model heads.
+Engine was made to be easily configurable. You can write your own configuration files based on your needs and use it with the engine. The config should be in `json` format and follow the schema defined in `schemas/vp_engine_config.json`. In `configs/` there is already a `default.json` configuration file which specifies default configuration with 3 model heads.
 
 In each configuration file one needs to specify the name of desired foundation models/model heads as specified in the model registry (cannonical name). Additionally, one can specify an alias that will be used across the engine instead of the lengthy cannonical name. For foundation model, you can specify a preprocessing function that you want to use, and for each model head you can specify a postprocessing function. Lastly, for each model you can specify rate, which is the upperbound on the inference frequency of each model (i.e. model can run slower in unexpected cases but it will not run faster than specified value).
 
@@ -104,7 +113,7 @@ Other parameters:
 ### Launching the engine
 Once all of the above is completed you can use the engine. Below is an example code snippet:
 ```python
-from nn_engine import Engine
+from vp_engine import Engine
 
 engine = Engine()
 
@@ -151,19 +160,19 @@ was_success: bool = change_model_rate("Model_name_to_target", new_rate)
 > The engine class and its methods can be only called from within the process it was started in. Engine is not designed to be moved across processes.
 
 ### ROS2 node
-If you want to use provided ROS2 (Humble) node, you will have to build it first. To do so you should have a ROS2 workspace directory set up (e.g. `~/ros2_ws`), in which you should have `src` directory containing the source code of all your packages. Ideally, this repository should be in that `src` directory (e.g. `~/ros2_ws/src/nn_engine`). Then, navigate to ROS2 workspace directory and run the following commands:
+If you want to use provided ROS2 (Humble) node, you will have to build it first. To do so you should have a ROS2 workspace directory set up (e.g. `~/ros2_ws`), in which you should have `src` directory containing the source code of all your packages. Ideally, this repository should be in that `src` directory (e.g. `~/ros2_ws/src/visual-perception-engine`). Then, navigate to ROS2 workspace directory and run the following commands:
 ```bash
 source /opt/ros/humble/install/setup.bash # set up ROS2 underlay, i.e. be able to use ros2 from command line
-colcon build --packages-select nn_engine
+colcon build --packages-select vp_engine_ros --symlink-install
 source install/setup.bash
 ```
 > [!NOTE]  
-> The core files for the node can be found in `ros_node/` or `include/nn_engine/` directories.
+> The core files for the node can be found in `ros_node/` or `include/vp_engine_ros/` directories.
 
 #### Usage
 Once the package is built you can launch it using:
 ```bash
-ros2 launch nn_engine engine_launch.xml
+ros2 launch vp_engine_ros engine_launch.xml
 ```
 The launch file `launch/engine_launch.xml` contains several parameters that you can adjust as needed, for example the topic name from which the images should be taken.
 
@@ -191,6 +200,21 @@ All models within the engine (foundation_models and model_heads) implement `Mode
 However, each model is internally build around `forward` call which can take arguments (and output results) of any shape their creators' hearts desired. This combined with the fact that ONNX (our implementation first converts models to ONNX and only then to TensorRT) does not support dicts resulted in `forward_annotated` being a wrapper of `forward` instead of drop-in replacement as originally planned. Furhtermore, `ModelInterfaceBase` requires one to implement `deannotate_input` and `annotate_output` methods. First function converts the input dict to the format accepted by `forward`, and the latter converts the output of `forward` to a dict. 
 
 **Important:** For proper functioning ensure that dict keys match across different models. E.g. make sure that when you implement a new model head its `input_signature` will have keys that are in `output_signature` of the foundation model.
+
+## Reproducibility
+To reproduce the benchmarks from our paper do the following. First run the following code snippet:
+```bash
+# make sure that jetson is set to maximum power mode
+sudo nvpmodel -m 0
+
+# make sure that fan is set to maximum speed
+sudo jetson_clocks --fan
+
+# Start the daemon
+nvidia-cuda-mps-control -d
+```
+
+Afterwards, to collect timings data you need to run `benchmarking/run_all_measure_time.sh` from within the docker container. Next, to collect peak GPU memory usage you should run `benchmarking/run_all_measure_gpu.sh` from outside the docker container.
 
 ## Authors
 If you have any questions please reach out to any of the authors or open a github issue.

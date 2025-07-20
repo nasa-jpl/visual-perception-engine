@@ -4,6 +4,7 @@ import logging
 import datetime
 
 import torch
+torch._dynamo.config.capture_scalar_outputs = True
 from torch2trt import TRTModule
 
 import model_architectures
