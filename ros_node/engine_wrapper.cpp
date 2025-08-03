@@ -74,11 +74,6 @@ EngineWrapper::EngineWrapper(const std::string& package_dir,
     }
     np::initialize();
 
-    // Insert package_dir into sys.path.
-    bp::object sys_module = bp::import("sys");
-    bp::object sys_path = sys_module.attr("path");
-    sys_path.attr("insert")(0, package_dir);
-
     // Import the 'src' module and get the Engine class.
     bp::object src_module = bp::import("vp_engine");
     bp::object engine_cls = src_module.attr("Engine");
