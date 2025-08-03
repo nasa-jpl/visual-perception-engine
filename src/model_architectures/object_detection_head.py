@@ -367,7 +367,7 @@ class ObjectDetectionHead(ModelInterfaceBase, ObjectDetector):
             ObjectDetector.label_to_cat(label.item()) + f": {score:.3f}" for label, score in zip(lbl, scores)
         ]
         output_image = draw_bounding_boxes(x, box, pred_labels, colors="red", width=5, font_size=25)
-        annotated_image = output_image.permute(1, 2, 0).cpu().numpy()[:, :, ::-1]
+        annotated_image = output_image.permute(1, 2, 0).cpu().numpy()
         return annotated_image
 
     @property

@@ -120,9 +120,13 @@ def stress_test(engine: Engine, n_inputs: int, time_interval: float, timeout: fl
                 if not output:
                     continue
                 try:
+                    post_func_name = engine.model_heads[i].postprocessing.__class__.__name__
                     head_cls = getattr(model_architectures, engine.model_heads[i].model_card.model_class_name)
                     original_image = torch.tensor(example_input.input_images[n % len(example_input.input_images)])
-                    output_img = head_cls.visualize_output(output, original_image)
+                    if "Visualization" in post_func_name:
+                        output_img = np.array(output["postprocessing_output"])
+                    else:
+                        output_img = head_cls.visualize_output(output, original_image)
                     cv2.imwrite(os.path.join(head_dir, f"{n:04d}.png"), output_img)
                 except NotImplementedError:
                     break
