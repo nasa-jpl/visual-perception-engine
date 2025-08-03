@@ -1,3 +1,8 @@
+[![arXiv](https://img.shields.io/badge/arXiv-soon-b31b1b)](https://to-be-added.com)
+![Jetson Orin](https://img.shields.io/badge/Jetson-Orin_AGX-76b900)
+![ROS 2](https://img.shields.io/badge/ROS_2-Humble-blue)
+![GitHub License](https://img.shields.io/github/license/nasa-jpl/visual-perception-engine)
+
 # Visual Perception Engine
 We created Visual Percpetion Engine to have one coherent module that will process visual percepts on GPU and output desired insights such as monocular depth. It was designed to be **efficient, modular, use constant memory and dynamic** such that it can be controlled at runtime. We provide an implementation that in **real time (30Hz)** computes monocular depth estimation (based on DepthAnythingV2), semantic segmentation and object detections. Furhtermore, the engine was created to be **easily configurable and extendable**, such that one can add their own model heads into the framework or change the existing ones. 
 
