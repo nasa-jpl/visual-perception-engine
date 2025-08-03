@@ -169,7 +169,7 @@ class CUDATimeBuffer(TimeBufferInterface):
         for k, v in self._buffer[0].effective_data_signature.items():
             self._output_slot[k] = torch.empty(*v, dtype=self.dtype, device=self.device)
 
-    def put(self, item: dict[str, torch.Tensor], item_id: int, sync=True) -> None:
+    def put(self, item: dict[str, torch.Tensor], item_id: float, sync=True) -> None:
         with self._oldest_idx.get_lock():
             oldest_idx = self._oldest_idx.value
             self._oldest_idx.value = (oldest_idx + 1) % self.max_size
