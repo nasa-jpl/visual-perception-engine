@@ -115,7 +115,7 @@ Once all of the above is completed you can use the engine. Below is an example c
 ```python
 from vp_engine import Engine
 
-engine = Engine()
+engine = Engine('configs/default.json', 'model_registry/registry.jsonl')
 
 # start all the processes and establishes interprocess communication
 engine.build()
@@ -153,11 +153,43 @@ output: None | np.ndarray | list[np.ndarray] = engine.get_head_output(X)
 
 # to change the firing rate of any model at runtime:
 new_rate = 10 #Hz
-was_success: bool = change_model_rate("Model_name_to_target", new_rate)
+was_success: bool = change_model_rate("model_name", new_rate)
 ```
 
 > [!NOTE]  
 > The engine class and its methods can be only called from within the process it was started in. Engine is not designed to be moved across processes.
+
+#### Small demo
+Example demo that showcases the usage of the Visual Perception Engine. For the paths to work make sure to be in the repository's top directory.
+```python
+from vp_engine import Engine
+engine = Engine('configs/default.json', 'model_registry/registry.jsonl')
+engine.build()
+engine.start_inference()
+was_success: bool = engine.test() 
+
+# load image
+import cv2
+from time import sleep
+image = cv2.imread("tests/resources/object_detection/inputs/20230710_103312.png")
+img_resized = cv2.resize(image, (1920, 1080))
+
+# input image
+was_success: bool = engine.input_image(img_resized) 
+
+sleep(0.1) # make sure all inputs are processed
+
+# get outputs
+depth_image: np.ndarray = engine.get_head_output(0)
+object_detection: list[np.ndarray] = engine.get_head_output(1) # [labels, scores, normalized boxes (i.e. to [0,1] range)]
+semantic_segmentation_image: np.ndarray = engine.get_head_output(2)
+
+# alternatively instead of the above get_head_outputs we can use heads to visualize the results
+head_id = 1
+obj_det_dict = engine.get_raw_head_output(head_id)
+visualization = engine.visualize_raw_output(head_id, raw_output = obj_det_dict, original_image = img_resized)
+cv2.imshow("Object detection visualization", visualization)
+```
 
 ### ROS2 node
 If you want to use provided ROS2 (Humble) node, you will have to build it first. To do so you should have a ROS2 workspace directory set up (e.g. `~/ros2_ws`), in which you should have `src` directory containing the source code of all your packages. Ideally, this repository should be in that `src` directory (e.g. `~/ros2_ws/src/visual-perception-engine`). Then, navigate to ROS2 workspace directory and run the following commands:
@@ -179,6 +211,12 @@ The launch file `launch/engine_launch.xml` contains several parameters that you 
 The node will create a publisher for every model head listed in the configuration, using alias as a topic name (or `cannonical_name` if alias was not provided).
 
 The node offers two services: `GetModelNames` - which returns list of the names of all models inside the engine, and `ChangeModelRate`- which allows the user to change firing rate of a particular model at runtime.
+
+#### Demo
+If you want to get a feeling of how this should work. Please download the following rosbag: [link](https:to.be.added.com). Then simply run
+```bash
+ros2 launch vp_engine_ros engine_demo.xml
+```
 
 ## For developers
 *In this section you will learn how the engine works internally and how to extend it with your own models.*
