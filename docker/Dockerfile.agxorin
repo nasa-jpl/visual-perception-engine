@@ -1,0 +1,160 @@
+# -------- Stage 1: Build
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE} as builder
+
+ENV CUDA_HOME=/usr/local/cuda \
+    DEBIAN_FRONTEND=noninteractive \
+    LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8 \
+    PIP_INDEX_URL=https://pypi.org/simple \
+    PATH=/usr/local/cuda/bin:$PATH \
+    LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+
+# -- Base setup
+RUN apt update && apt install -y \
+    sudo sed procps locales \
+    software-properties-common zip cmake g++ gnupg2 lsb-release && \
+    add-apt-repository universe && \
+    locale-gen en_US en_US.UTF-8 && \
+    update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+
+# -- Lightweight Python deps
+RUN python3 -m pip install -U pip jetson-stats && \
+    pip install tqdm plotly kaleido pandas nbformat ipykernel timm \
+    onnxruntime==1.21.0 cuda-python onnx_graphsurgeon==0.5.6 onnx==1.17.0 gdown
+
+# -- Build Triton
+WORKDIR /opt
+RUN git clone https://github.com/triton-lang/triton.git && \
+    cd triton && \
+    pip install -r python/requirements.txt && \
+    MAX_JOBS=8 python3 -m pip wheel . --no-build-isolation -v -w dist && \
+    pip install dist/triton*.whl && \
+    cd .. && rm -rf triton
+
+# -- Fix base image
+RUN echo "/usr/local/cuda/lib64" > /etc/ld.so.conf.d/nvidia.conf && \
+    echo "/usr/lib/aarch64-linux-gnu/nvidia" >> /etc/ld.so.conf.d/nvidia.conf && \
+    rm -f /etc/ld.so.conf.d/nvidia-tegra.conf && \
+    ldconfig
+
+# -- Build torch2trt
+ENV LD_LIBRARY_PATH="/usr/local/lib:/usr/lib/aarch64-linux-gnu/nvidia:${LD_LIBRARY_PATH}" \
+    PATH=/usr/local/cuda/bin:/usr/local/mpi/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/ucx/bin:/opt/amazon/efa/bin:/opt/tensorrt/bin:/usr/local/lib/python3.12/dist-packages/torch_tensorrt/bin
+
+WORKDIR /opt/torch2trt
+RUN git clone https://github.com/NVIDIA-AI-IOT/torch2trt /opt/torch2trt && \
+    sed -i '/^[[:space:]]*return[[:space:]]\+isinstance(x, torch.Tensor)/c\    return isinstance(x, torch.Tensor) and (x.dtype is torch.half or x.dtype is torch.float or x.dtype == torch.bool)' /opt/torch2trt/torch2trt/flattener.py && \
+    sed -i 's|^set(CUDA_ARCHITECTURES.*|#|g' /opt/torch2trt/CMakeLists.txt && \
+    sed -i 's|Catch2_FOUND|False|g' /opt/torch2trt/CMakeLists.txt && \
+    cmake -B build -DCUDA_ARCHITECTURES=87 . && \
+    cmake --build build --target install && \
+    ldconfig && \
+    rm -rf /opt/torch2trt
+
+COPY ./torch2trt-0.5.0-py3-none-any.whl /tmp/
+
+# -------- Stage 2: Runtime (Final Image) --------
+FROM ${BASE_IMAGE} as final
+
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8 \
+    CUDA_VISIBLE_DEVICES=0 \
+    CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps \
+    CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-mps/log \
+    ROS_DISTRO=jazzy \
+    ROS_VERSION=2 \
+    ROS_PYTHON_VERSION=3 \
+    LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/lib/aarch64-linux-gnu/nvidia:/usr/local/lib:/usr/lib/aarch64-linux-gnu:/usr/local/cuda/compat/lib.real:/usr/local/lib/python3.12/dist-packages/torch/lib:/usr/local/lib/python3.12/dist-packages/torch_tensorrt/lib \
+    PATH=/usr/local/cuda/bin:/usr/local/mpi/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/ucx/bin:/opt/amazon/efa/bin:/opt/tensorrt/bin:/usr/local/lib/python3.12/dist-packages/torch_tensorrt/bin
+
+#  ROS2 Jazzy Install
+RUN apt update && apt install -y \
+    git sudo procps python3-pip locales \
+    software-properties-common gnupg2 lsb-release && \
+    add-apt-repository universe && \
+    sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen && \
+    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg && \
+    echo "deb [arch=arm64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list && \
+    apt update && \
+    apt install -y ros-jazzy-desktop ros-dev-tools python3-colcon-common-extensions && \
+    rm -rf /var/lib/apt/lists/*
+    #echo "source /opt/ros/jazzy/setup.bash" >> /etc/bash.bashrc && \
+    
+# -- Copy runtime files
+COPY --from=builder /usr/local/lib /usr/local/lib/
+COPY --from=builder /usr/local/bin /usr/local/bin/
+COPY --from=builder /usr/lib/aarch64-linux-gnu/libcuda* /usr/lib/aarch64-linux-gnu/
+COPY --from=builder /usr/local/jetson_stats /usr/local/jetson_stats/
+COPY --from=builder /usr/local/lib/libtorch2trt_plugins.so /usr/local/lib/
+#COPY --from=builder /usr/lib/aarch64-linux-gnu/nvidia /usr/lib/aarch64-linux-gnu/nvidia/
+COPY --from=builder /usr/local/share /usr/local/share/
+COPY --from=builder /usr/local/etc/jupyter /usr/local/etc/jupyter/
+COPY --from=builder /etc/ld.so.conf.d /etc/ld.so.conf.d/
+COPY --from=builder /tmp/torch2trt-0.5.0-py3-none-any.whl /tmp/
+
+# -- MPS dirs and install torch2trt wheel.
+RUN ldconfig && \
+    mkdir -p ${CUDA_MPS_PIPE_DIRECTORY} ${CUDA_MPS_LOG_DIRECTORY} && \
+    python3 -m pip install --no-deps /tmp/torch2trt-0.5.0-py3-none-any.whl && \
+    python3 -m pip install cuda-core[cu12] && \
+    mkdir -p /usr/local/lib/python3.12/models && \
+    rm -f /tmp/torch2trt*.whl
+
+# -- Install visual-perception-engine
+WORKDIR /opt
+RUN git clone https://github.com/nasa-jpl/visual-perception-engine.git && \
+    python3 -m pip install ./visual-perception-engine --no-deps
+    #mkdir -p visual-perception-engine/models/checkpoints
+    #gdown should perhaps be pip installed locally. If following 2 lines are run in image it adds 694mb to image.
+    #gdown --folder https://drive.google.com/drive/folders/1SWMlEqOE_7EWPCkMloDTXG1_mZAmeW3- \
+    #      -O visual-perception-engine/models/
+    #sudo python3 -c import vp_engine; vp_engine.export_default_models()
+
+# -- reduce size of image
+RUN rm -rf /root/.cache/pip && \
+    rm -rf /tmp/* && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set defaults (override with --build-arg as needed)
+ARG _UID=1000
+ARG _GID=1000
+ARG USER
+
+# Ensure MPS env (match these to what you actually use earlier)
+ENV CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps \
+    CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-mps/log
+
+# Rename ubuntu user if needed, sync UID/GID, (re)create MPS dirs, and fix ownership
+RUN install -d -m 1777 /tmp && \
+ install -d ${CUDA_MPS_PIPE_DIRECTORY} ${CUDA_MPS_LOG_DIRECTORY} && \
+ if id "ubuntu" >/dev/null 2>&1 && [ "$(id -u ubuntu)" = "${_UID}" ]; then \
+        usermod -l "${USER}" ubuntu && \
+        groupmod -n "${USER}" ubuntu && \
+        usermod -d "/home/${USER}" -m "${USER}"; \
+    fi && \
+    groupmod -g "${_GID}" "${USER}" && \
+    usermod -u "${_UID}" -g "${_GID}" -a -G video "${USER}" && \
+    echo "${USER} ALL=(ALL) NOPASSWD: ALL" > "/etc/sudoers.d/${USER}" && \
+    chmod 0440 "/etc/sudoers.d/${USER}" && \
+    mkdir -p "/home/${USER}/ros2_ws/src" && \
+    chown -R "${USER}:${USER}" "/home/${USER}" && \
+    chown "${USER}" "${CUDA_MPS_PIPE_DIRECTORY}" "${CUDA_MPS_LOG_DIRECTORY}" && \
+    rm -rf "/home/${USER}/home"
+
+USER ${USER}
+WORKDIR /home/${USER}
+
+# Optional: Build ROS workspace
+#RUN . /opt/ros/jazzy/setup.sh && \
+#    colcon build --symlink-install && \
+#    echo "source /home/${USER}/ros2_ws/install/setup.bash" >> /home/${USER}/.bashrc
+
+# -- Final setup
+COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/bin/bash"]

@@ -1,0 +1,57 @@
+services:
+  visual-perception-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile.agxorin
+      ssh:
+        - 'default'
+      args:
+        _UID: '${_UID}'
+        _GID: '${_GID}'
+        USER: '${USER}'
+        WORKSPACE: '${WORKSPACE}'
+        REPOS: '${REPOS}'
+        BASE_IMAGE: 'nvcr.io/nvidia/pytorch:25.06-py3-igpu'
+    ulimits:
+      rtprio:
+        soft: 90
+        hard: 95
+      nice:
+        soft: -20
+        hard: -20
+    cap_add:
+      - SYS_NICE
+    container_name: engine
+    image: visual-perception-engine:latest
+    runtime: nvidia
+    privileged: true
+    network_mode: host
+    ipc: host
+    stdin_open: true
+    tty: true
+    environment:
+      - DISPLAY=$DISPLAY
+      - QT_X11_NO_MITSHM=1
+      - USER=$USER
+    volumes:
+      - /home/${USER}/${WORKSPACE}:/home/${USER}/${WORKSPACE}
+      - /home/${USER}/rosbags:/home/${USER}/rosbags
+      - /data/ros:/data/ros
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/${USER}/.Xauthority:rw
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /dev/input:/dev/input
+      - /dev/bus/usb:/dev/bus/usb
+      - ~/.ssh:/home/${USER}/.ssh:ro
+      - ~/.bashrc:/home/${USER}/.bashrc
+      - ~/.julia:/home/${USER}/.julia
+      - /run/jtop.sock:/run/jtop.sock # to be able to run jtop inside docker
+      - /opt/nvidia/nsight-systems/2024.5.4:/nsys # to be able to run nsys inside docker
+      - /tmp/nvidia-mps:/tmp/nvidia-mps
+      - /tmp/nvidia-log:/tmp/nvidia-log
+    command: bash
+    devices:
+      - "/dev:/dev"
+      - "/run/dbus:/run/dbus"
