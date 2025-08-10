@@ -218,7 +218,7 @@ The node will create a publisher for every model head listed in the configuratio
 The node offers two services: `GetModelNames` - which returns list of the names of all models inside the engine, and `ChangeModelRate`- which allows the user to change firing rate of a particular model at runtime.
 
 #### Demo
-If you want to get a feeling of how this should work. Please download the following rosbag: [link](https:to.be.added.com). Then simply run
+If you want to get a feeling of how this should work. Please download the following rosbag: [link](https:to.be.added.com). Unzip it and place it in the directory from which you will run the following command.
 ```bash
 ros2 launch vp_engine_ros engine_demo.xml
 ```
