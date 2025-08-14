@@ -5,7 +5,8 @@
 ![ROS 2](https://img.shields.io/badge/ROS_2-Humble-blue)
 ![GitHub License](https://img.shields.io/github/license/nasa-jpl/visual-perception-engine)
 
-We created Visual Percpetion Engine to have one coherent module that will process visual percepts on GPU and output desired insights such as monocular depth. It was designed to be **efficient, modular, use constant memory and dynamic** such that it can be controlled at runtime. We provide an implementation that in **real time (30Hz)** computes monocular depth estimation (based on DepthAnythingV2), semantic segmentation and object detections. Furhtermore, the engine was created to be **easily configurable and extendable**, such that one can add their own model heads into the framework or change the existing ones. 
+We created the **Visual Perception Engine** as a single, coherent module for processing visual inputs on a GPU and producing insights such as monocular depth. It was designed to be **efficient, modular, memory-efficient, and dynamic**, allowing control at runtime. Our implementation computes monocular depth estimation (based on DepthAnythingV2) and semantic segmentation **in real time (≥ 50 Hz)**. As a testament to the engine’s flexibility, it also includes object detection implemented entirely in pure **PyTorch**. Furthermore, the engine is **easily configurable and extensible**, enabling users to add their own model heads or modify existing ones within the framework.
+
 
 > [!TIP]
 > We also provide C++ ROS2 (Humble) node that can be easily incorporated into existing robotic stacks.
