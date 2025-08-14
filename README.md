@@ -1,9 +1,10 @@
+
+# Visual Perception Engine
 [![arXiv](https://img.shields.io/badge/arXiv-soon-b31b1b)](https://to-be-added.com)
 ![Jetson Orin](https://img.shields.io/badge/Jetson-Orin_AGX-76b900)
 ![ROS 2](https://img.shields.io/badge/ROS_2-Humble-blue)
 ![GitHub License](https://img.shields.io/github/license/nasa-jpl/visual-perception-engine)
 
-# Visual Perception Engine
 We created Visual Percpetion Engine to have one coherent module that will process visual percepts on GPU and output desired insights such as monocular depth. It was designed to be **efficient, modular, use constant memory and dynamic** such that it can be controlled at runtime. We provide an implementation that in **real time (30Hz)** computes monocular depth estimation (based on DepthAnythingV2), semantic segmentation and object detections. Furhtermore, the engine was created to be **easily configurable and extendable**, such that one can add their own model heads into the framework or change the existing ones. 
 
 > [!TIP]
@@ -218,7 +219,7 @@ The node will create a publisher for every model head listed in the configuratio
 The node offers two services: `GetModelNames` - which returns list of the names of all models inside the engine, and `ChangeModelRate`- which allows the user to change firing rate of a particular model at runtime.
 
 #### Demo
-If you want to get a feeling of how this should work. Please download the following rosbag: [link](https:to.be.added.com). Unzip it and place it in the directory from which you will run the following command.
+If you want to get a feeling of how this should work. Please download the following rosbag: [link](https://drive.google.com/file/d/1POEjcRNCYnsRQf_IvvDmyIg58T_gVboB/view?usp=sharing). Unzip it and place it in the directory from which you will run the following command.
 ```bash
 ros2 launch vp_engine_ros engine_demo.xml
 ```
