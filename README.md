@@ -263,7 +263,8 @@ Afterwards, to collect timings data you need to run `benchmarking/run_all_measur
 
 ## Authors
 If you have any questions please reach out to any of the authors or open a github issue.
-* Jakub Łucki
-* Jonathan Becktor 
-* Shehryar Khattak (skhattak@jpl.nasa.gov)
-* Rob Royce (rob.royce@jpl.nasa.gov)
+* [Jakub Łucki](https://www.linkedin.com/in/jakublucki/)
+* [Jonathan Becktor](https://www.linkedin.com/in/jbecktor/) 
+* [Georgios Georgakis](https://www.linkedin.com/in/georgios-georgakis-517a1a76/)
+* [Robert Royce](https://www.linkedin.com/in/robroyce/)
+* [Shehryar Khattak](https://www.linkedin.com/in/shehryar-khattak/)
