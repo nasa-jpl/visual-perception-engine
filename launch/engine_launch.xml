@@ -2,9 +2,9 @@
 <launch>
   <arg name="sigterm_timeout" default="10" /> <!-- the original default is 5 sec, however the engine takes a bit longer to close properly all children processes -->
   <node pkg="vp_engine_ros" exec="engine_main" name="vp_engine_ros">
-    <!-- the path to the default configuration file (relative from package dir) -->
+    <!-- the path to the default configuration file (relative to repository dir) -->
     <param name="engine_configuration_filepath" value="configs/default.json" /> 
-    <!-- the path to the default file containing (relative from package dir) -->
+    <!-- the path to the default file containing (relative to repository dir) -->
     <param name="model_registry_filepath" value="model_registry/registry.jsonl" />
     <param name="input_topic_name" value="images" />
   </node>

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="bag_path" default="kitti_demo" description="Path to the rosbag file to play."/>
+  <arg name="rviz_config" default="$(find-pkg-share vp_engine_ros)/launch/engine_demo.rviz" description="Full path to the RViz2 configuration file."/>
+  <arg name="sigterm_timeout" default="15" description="SIGTERM timeout in seconds for the engine node."/>
+  <arg name="load_delay" default="15.0" description="Seconds to wait for the engine to load before playing ros bag."/>
+  <arg name="play_rate" default=".25" description="Rosbag playback rate (e.g., 0.5 for half speed)."/>
+
+  <node pkg="vp_engine_ros" exec="engine_main" name="vp_engine_ros" output="screen">
+    <!-- the path to the default configuration file (relative to repository dir) -->
+    <param name="engine_configuration_filepath" value="configs/demo.json" /> 
+    <!-- the path to the default file containing (relative to repository dir) -->
+    <param name="model_registry_filepath" value="model_registry/registry.jsonl" />
+    <param name="input_topic_name" value="/kitti/camera_color_left/image_raw"/>
+  </node>
+
+  <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(var rviz_config)"/>
+
+  <timer period="$(var load_delay)">
+    <executable cmd="ros2 bag play $(var bag_path) -r $(var play_rate)" output="screen"/>
+  </timer>
+
+</launch>

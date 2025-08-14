@@ -9,7 +9,7 @@ import torch
 import torch.multiprocessing as mp
 from cuda import cuda
 
-import transforms
+import transforms, model_architectures
 from model_management.model_cards import ModelCard, ModelHeadCard
 from model_management.registry import ModelRegistry
 from model_management.util import PRECISION_MAP_TORCH
@@ -312,9 +312,9 @@ class Engine:
         self.logger.info(MESSAGE.ENGINE_TEST_START)
         test_shape = self.config.canonical_image_shape_hwc
         test_inputs = [
-            ( np.zeros(test_shape, dtype=np.uint8), -3),
-            ( 0.5 * np.ones(test_shape, dtype=np.uint8), -2),
-            ( np.ones(test_shape, dtype=np.uint8), -1),
+            ( np.zeros(test_shape, dtype=np.uint8), -3.01),
+            ( 0.5 * np.ones(test_shape, dtype=np.uint8), -2.01),
+            ( np.ones(test_shape, dtype=np.uint8), -1.01),
         ]
 
         start_time = perf_counter()
@@ -369,7 +369,7 @@ class Engine:
             self.logger.info(MESSAGE.FREQUENCY_CHANGED.format(model_name=candidate.name, frequency=new_rate))
             return True
 
-    def input_image(self, image: torch.Tensor | np.ndarray, image_id: int = -1) -> bool:
+    def input_image(self, image: torch.Tensor | np.ndarray, image_id: float = -1) -> bool:
         try:
             self.input_queue.put({PREPROCESSING_INPUT: torch.tensor(image)}, image_id)
             self.logger.info(MESSAGE.ADDED_TO_QUEUE.format(n=image_id, queue_size="N/A"))
@@ -393,6 +393,10 @@ class Engine:
             return {}
 
         return output
+    
+    def visualize_raw_output(self, head_id: int, raw_output: dict[str, np.ndarray], original_image: None | np.ndarray = None) -> np.ndarray:
+        head_cls = getattr(model_architectures, self.model_heads[head_id].model_card.model_class_name)
+        return head_cls.visualize_output(raw_output, original_image) 
 
     def _detect_output_type(self, head_id: int) -> Literal["image", "object_detection"]:
         out_signature = self.model_heads[head_id].postprocessing.output_signature
