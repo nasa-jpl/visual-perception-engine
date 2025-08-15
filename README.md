@@ -15,7 +15,7 @@ We created the **Visual Perception Engine** as a single, coherent module for pro
 ## How does it work?
 The engine levarages a single powerful vision foundation model (DINOv2 in our case) that computes features and several model heads that use those features to compute desired insights. Whenever possible we converted the models into TensorRT engine for efficiency, however our architecture also supports PyTorch models. Each model (foundation model and individual model heads) are run in separate processes, and send data between each other using custom queues and buffers that allow for sending pointers to tensors on GPU. See figure below for an overview:
 
-![Figure 1: Overview of the engine's internal structure](static/vpe_main_fig_v1.jpg)
+![Figure 1: Overview of the engine's internal structure](static/vpe_main.png)
 
 ### Data transfer
 Between all elements of the engine data should be exchanged in a dictionary format using meaningful keys for indetifiability. For example, DINOv2 outputs a tuple of 8 tensors, to which we assign names such as `FM_INTERMEDIATE_FEATURES_3`, `FM_INTERMEDIATE_CLS_TOKEN_3`, `FM_OUTPUT_FEATURES`, `FM_OUTPUT_CLS_TOKEN`. This way each model head can specify which tensors does it need. The names of all keys used for data transfered should be declared in `src/engine/naming_convention.py`.
