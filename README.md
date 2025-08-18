@@ -1,5 +1,5 @@
 
-# Visual Perception Engine
+# Visual Perception Engine: Fast and Flexible Multi-Head Inference for Robotic Vision Tasks
 [![arXiv](https://img.shields.io/badge/arXiv-2508.11584-b31b1b.svg)](https://arxiv.org/abs/2508.11584)
 ![Jetson Orin](https://img.shields.io/badge/Jetson-Orin_AGX-76b900)
 ![ROS 2](https://img.shields.io/badge/ROS_2-Humble-blue)
@@ -260,6 +260,18 @@ nvidia-cuda-mps-control -d
 ```
 
 Afterwards, to collect timings data you need to run `benchmarking/run_all_measure_time.sh` from within the docker container. Next, to collect peak GPU memory usage you should run `benchmarking/run_all_measure_gpu.sh` from outside the docker container.
+
+## Citation
+If you find this project useful, please consider citing:
+
+```bibtex
+@article{vpe_2025,
+      title={Visual Perception Engine: Fast and Flexible Multi-Head Inference for Robotic Vision Tasks}, 
+      author={Jakub Łucki and Jonathan Becktor and Georgios Georgakis and Rob Royce and Shehryar Khattak},
+      journal={arXiv:2508.11584},
+      year={2025},
+}
+```
 
 ## Authors
 If you have any questions please reach out to any of the authors or open a github issue.
