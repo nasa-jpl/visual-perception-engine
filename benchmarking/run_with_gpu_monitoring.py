@@ -71,7 +71,7 @@ def main():
     )
     parser.add_argument(
         "--container", 
-        default="6857100e15cd",
+        default="engine",
         type=str,
         help="Id of the container to attach to.",
     )
