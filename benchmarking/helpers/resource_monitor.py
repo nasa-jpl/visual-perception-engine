@@ -50,8 +50,8 @@ def monitor_jtop_process(event, output_filepath="resource_usage.csv"):
                     stats.update(
                         {
                             "gpu_load": jetson.gpu["gpu"]["status"]["load"],
-                            "gpu_memory": MB2GB(jetson.memory["RAM"]["shared"]),
-                            "used_ram": MB2GB(jetson.memory["RAM"]["used"]),
+                            "gpu_memory": KB2GB(jetson.memory["RAM"]["shared"]),
+                            "used_ram": KB2GB(jetson.memory["RAM"]["used"]),
                         }
                     )
                     writer.writerow(stats)

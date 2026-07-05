@@ -24,6 +24,14 @@ from utils.naming_convention import *
 REPOSITORY_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
+def print_benchmark_window_start() -> None:
+    print(f"BENCHMARK_WINDOW_START epoch={time.time():.6f}", flush=True)
+
+
+def print_benchmark_window_end() -> None:
+    print(f"BENCHMARK_WINDOW_END epoch={time.time():.6f}", flush=True)
+
+
 def load_images(input_shape: tuple[int, int]) -> List[np.ndarray]:
     """
     Loads and resizes images from a list of directories, mimicking the procedure
@@ -47,6 +55,7 @@ def run_vp_engine_benchmark(engine: Engine, images: List[np.ndarray], num_heads:
     """Runs the benchmark using the visual perception engine."""
     timings = []
 
+    print_benchmark_window_start()
     for i, image in enumerate(images):
         start_time = time.perf_counter()
         engine.input_image(image, i)
@@ -62,6 +71,7 @@ def run_vp_engine_benchmark(engine: Engine, images: List[np.ndarray], num_heads:
         end_time = time.perf_counter()
         timings.append(end_time - start_time)
 
+    print_benchmark_window_end()
     return timings
 
 
@@ -142,6 +152,7 @@ def run_baseline_benchmark(
                 for key in postprocessed_output:
                     _ = postprocessed_output[key].cpu()
 
+    print_benchmark_window_start()
     for image in tqdm(images, desc=f"Processing with {framework}"):
         start_time = time.perf_counter()
         
@@ -153,6 +164,7 @@ def run_baseline_benchmark(
         end_time = time.perf_counter()
         timings.append(end_time - start_time)
 
+    print_benchmark_window_end()
     return timings
 
 
