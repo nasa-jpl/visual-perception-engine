@@ -44,8 +44,12 @@ dependencies = [
   "torchvision>0.19.0",
   "cuda-python>=12.6",
   "numpy>=1.26.4",
+  "jsonschema>=4.0",
   "setuptools"
 ]
+
+[project.scripts]
+vp-engine-doctor = "vp_engine.doctor:main"
 
 [project.urls]
 Homepage = "https://github.com/nasa-jpl/visual-perception-engine"
