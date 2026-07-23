@@ -37,7 +37,7 @@ classifiers = [
 dependencies = [
   "onnxruntime==1.21.0",
   "onnx_graphsurgeon==0.5.6",
-  "onnx==1.17.0",
+  "onnx==1.21.0",
   "torch2trt==0.5.0",
   "torch>=2.4.0",
   "tensorrt==10.4.0",
